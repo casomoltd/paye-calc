@@ -4,7 +4,7 @@ import type {
   NIThresholds,
   StudentLoanPlan,
   StudentLoanThreshold,
-} from './types';
+} from './types.js';
 
 /**
  * Shared fields across all UK tax year configs.

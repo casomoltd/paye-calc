@@ -1,12 +1,12 @@
 import type {
   TaxYearConfigUk,
   TaxYearConfigScotland,
-} from '../TaxYearConfig';
+} from '../TaxYearConfig.js';
 import {
   TAX_YEARS,
   StudentLoanPlan,
-} from '../types';
-import type {NHSPensionTier} from '../types';
+} from '../types.js';
+import type {NHSPensionTier} from '../types.js';
 
 const YEAR = TAX_YEARS.Y2024_25;
 const DISPLAY_NAME = '2024-25';

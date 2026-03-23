@@ -1,18 +1,18 @@
-export {TakeHomePay} from './TakeHomePay';
-export {TaxCode, TaxStrategy, TAX_CODE_PREFIX} from './TaxCode';
+export {TakeHomePay} from './TakeHomePay.js';
+export {TaxCode, TaxStrategy, TAX_CODE_PREFIX} from './TaxCode.js';
 export type {
   TaxYearConfig,
   TaxYearConfigUk,
   TaxYearConfigScotland,
-} from './TaxYearConfig';
+} from './TaxYearConfig.js';
 export {
   calculateTaperedPersonalAllowance,
-} from './TaxYearConfig';
+} from './TaxYearConfig.js';
 export {
   getTaxYearConfig,
   availableTaxYears,
   disabledTaxYears,
-} from './taxYears';
+} from './taxYears/index.js';
 export {
   SalaryType,
   Period,
@@ -30,7 +30,7 @@ export {
   NetAnnual,
   PensionPercent,
   PensionFixed,
-} from './types';
+} from './types.js';
 export type {
   TaxYear,
   Nation,
@@ -44,4 +44,4 @@ export type {
   NHSPensionTier,
   StudentLoanThreshold,
   StudentLoanBreakdown,
-} from './types';
+} from './types.js';

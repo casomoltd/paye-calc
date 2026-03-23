@@ -15,13 +15,13 @@ import {
   NHSPensionTier,
   StudentLoanPlan,
   StudentLoanBreakdown,
-} from './types';
+} from './types.js';
 import {
   TaxYearConfig,
   calculateTaperedPersonalAllowance,
-} from './TaxYearConfig';
-import {getTaxYearConfig} from './taxYears';
-import {TaxCode, TaxStrategy} from './TaxCode';
+} from './TaxYearConfig.js';
+import {getTaxYearConfig} from './taxYears/index.js';
+import {TaxCode, TaxStrategy} from './TaxCode.js';
 
 /**
  * TakeHomePay model - calculates UK PAYE take-home pay.

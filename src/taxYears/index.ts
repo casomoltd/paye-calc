@@ -1,17 +1,17 @@
-import {TaxYear, TaxRegion, TAX_YEARS} from '../types';
-import type {TaxYearConfig} from '../TaxYearConfig';
+import {TaxYear, TaxRegion, TAX_YEARS} from '../types.js';
+import type {TaxYearConfig} from '../TaxYearConfig.js';
 import {
   TaxYear2023,
   TaxYear2023Scotland,
-} from './TaxYear2023';
+} from './TaxYear2023.js';
 import {
   TaxYear2024,
   TaxYear2024Scotland,
-} from './TaxYear2024';
+} from './TaxYear2024.js';
 import {
   TaxYear2025,
   TaxYear2025Scotland,
-} from './TaxYear2025';
+} from './TaxYear2025.js';
 
 const taxYearConfigs: Record<
   TaxYear,
