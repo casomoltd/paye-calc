@@ -21,7 +21,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run lint && npm run typecheck && npm run test"
+    "knip": "knip",
+    "jscpd": "jscpd ./src",
+    "check": "npm run lint && npm run typecheck && npm run test",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
@@ -48,10 +51,14 @@
     "registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
-    "@casomoltd/tooling": "^0.1.0",
+    "@casomoltd/tooling": "^0.2.0",
+    "@commitlint/cli": "^20.0.0",
     "@types/node": "^25.5.0",
     "eslint": "^9.0.0",
     "eslint-plugin-sonarjs": "^3.0.0",
+    "husky": "^9.0.0",
+    "jscpd": "^4.0.0",
+    "knip": "^5.0.0",
     "prettier": "^3.0.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.0.0",

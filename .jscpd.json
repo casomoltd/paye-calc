@@ -1,0 +1,10 @@
+{
+  "threshold": 5,
+  "reporters": ["console"],
+  "ignore": [
+    "**/dist/**",
+    "**/node_modules/**",
+    "**/*.lock",
+    "src/taxYears/**"
+  ]
+}
