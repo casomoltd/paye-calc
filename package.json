@@ -1,0 +1,60 @@
+{
+  "name": "@casomo/paye-calc",
+  "version": "0.1.0",
+  "description": "UK PAYE take-home pay calculator — income tax, NI, pensions, student loans",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "npm run lint && npm run typecheck && npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/casomoltd/paye-calc.git"
+  },
+  "keywords": [
+    "paye",
+    "tax",
+    "calculator",
+    "uk",
+    "hmrc",
+    "income-tax",
+    "national-insurance",
+    "pension",
+    "student-loan",
+    "take-home-pay"
+  ],
+  "author": "Casomo Ltd",
+  "license": "LGPL-3.0-only",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@casomoltd/design-tokens": "file:../design-tokens"
+  },
+  "devDependencies": {
+    "@casomo/tooling": "file:../tooling",
+    "@types/node": "^25.5.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-sonarjs": "^3.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.0.0"
+  }
+}
