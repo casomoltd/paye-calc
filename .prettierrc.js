@@ -1,2 +1,2 @@
-import config from '@casomo/tooling/prettier';
+import config from '@casomoltd/tooling/prettier';
 export default config;

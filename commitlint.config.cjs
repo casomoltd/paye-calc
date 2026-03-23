@@ -1,1 +1,1 @@
-module.exports = require('@casomo/tooling/commitlint');
+module.exports = require('@casomoltd/tooling/commitlint');

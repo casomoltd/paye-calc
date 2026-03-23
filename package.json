@@ -44,8 +44,11 @@
   "engines": {
     "node": ">=22"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "devDependencies": {
-    "@casomo/tooling": "file:../tooling",
+    "@casomoltd/tooling": "^0.1.0",
     "@types/node": "^25.5.0",
     "eslint": "^9.0.0",
     "eslint-plugin-sonarjs": "^3.0.0",
