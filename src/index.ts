@@ -41,7 +41,6 @@ export type {
   TaxBandBreakdown,
   NIThresholds,
   NIBreakdown,
-  ChartSegment,
   NHSPensionTier,
   StudentLoanThreshold,
   StudentLoanBreakdown,

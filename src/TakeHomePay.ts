@@ -7,7 +7,6 @@ import {
   SalaryType,
   TaxBandBreakdown,
   NIBreakdown,
-  ChartSegment,
   TAX_BAND_NAMES,
   Pension,
   PensionType,
@@ -615,50 +614,6 @@ export class TakeHomePay {
     }
 
     return breakdown;
-  }
-
-  /** Chart segments for visualization (annual). */
-  get chartSegments(): ChartSegment[] {
-    return [
-      {label: 'Take Home', value: this.net},
-      {label: 'Income Tax', value: this.incomeTax},
-      {
-        label: 'National Insurance',
-        value: this.nationalInsurance,
-      },
-      {
-        label: 'Student Loans',
-        value: this.studentLoanDeduction,
-      },
-      {label: 'Pension', value: this.pensionDeduction},
-    ].filter(segment => segment.value > 0);
-  }
-
-  /** Chart segments adjusted for display period. */
-  get displayChartSegments(): ChartSegment[] {
-    const divisor = this._periodDivisor;
-    return [
-      {
-        label: 'Take Home',
-        value: this.net / divisor,
-      },
-      {
-        label: 'Income Tax',
-        value: this.incomeTax / divisor,
-      },
-      {
-        label: 'National Insurance',
-        value: this.nationalInsurance / divisor,
-      },
-      {
-        label: 'Student Loans',
-        value: this.studentLoanDeduction / divisor,
-      },
-      {
-        label: 'Pension',
-        value: this.pensionDeduction / divisor,
-      },
-    ].filter(segment => segment.value > 0);
   }
 
   /** List of calculation assumptions. */

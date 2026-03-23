@@ -356,18 +356,6 @@ describe('TakeHomePay', () => {
       );
     });
 
-    it('shows weekly chart segments', () => {
-      model.setSalary(GrossAnnual(52000));
-      model.setPeriod(Period.Weekly);
-      const segments = model.displayChartSegments;
-      const takeHome = segments.find(
-        s => s.label === 'Take Home',
-      );
-      expect(takeHome).toBeDefined();
-      expect(takeHome!.value).toBeCloseTo(
-        model.net / 52, 2,
-      );
-    });
   });
 
   describe('effective tax rate', () => {
@@ -407,32 +395,6 @@ describe('TakeHomePay', () => {
       expect(ni.mainRateAmount).toBe(37700);
       expect(ni.upperRateAmount).toBe(9730);
       expect(ni.total).toBeCloseTo(3210.6, 1);
-    });
-
-    it('provides chart segments', () => {
-      model.setSalary(GrossAnnual(50000));
-      const segments = model.chartSegments;
-
-      expect(segments.length).toBeGreaterThanOrEqual(
-        3,
-      );
-      expect(
-        segments.find(s => s.label === 'Take Home'),
-      ).toBeDefined();
-      expect(
-        segments.find(
-          s => s.label === 'Income Tax',
-        ),
-      ).toBeDefined();
-    });
-
-    it('excludes zero-value segments', () => {
-      model.setSalary(GrossAnnual(50000));
-      model.setPension(PensionPercent(0));
-      const segments = model.chartSegments;
-      expect(
-        segments.find(s => s.label === 'Pension'),
-      ).toBeUndefined();
     });
   });
 
