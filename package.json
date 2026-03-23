@@ -1,5 +1,5 @@
 {
-  "name": "@casomo/paye-calc",
+  "name": "@casomoltd/paye-calc",
   "version": "0.1.0",
   "description": "UK PAYE take-home pay calculator — income tax, NI, pensions, student loans",
   "type": "module",
@@ -43,9 +43,6 @@
   "license": "LGPL-3.0-only",
   "engines": {
     "node": ">=22"
-  },
-  "dependencies": {
-    "@casomoltd/design-tokens": "file:../design-tokens"
   },
   "devDependencies": {
     "@casomo/tooling": "file:../tooling",

@@ -23,7 +23,6 @@ import {
 } from './TaxYearConfig';
 import {getTaxYearConfig} from './taxYears';
 import {TaxCode, TaxStrategy} from './TaxCode';
-import {CHART_COLORS} from './chart-colors';
 
 /**
  * TakeHomePay model - calculates UK PAYE take-home pay.
@@ -621,31 +620,17 @@ export class TakeHomePay {
   /** Chart segments for visualization (annual). */
   get chartSegments(): ChartSegment[] {
     return [
-      {
-        label: 'Take Home',
-        value: this.net,
-        color: CHART_COLORS.takeHome,
-      },
-      {
-        label: 'Income Tax',
-        value: this.incomeTax,
-        color: CHART_COLORS.incomeTax,
-      },
+      {label: 'Take Home', value: this.net},
+      {label: 'Income Tax', value: this.incomeTax},
       {
         label: 'National Insurance',
         value: this.nationalInsurance,
-        color: CHART_COLORS.nationalInsurance,
       },
       {
         label: 'Student Loans',
         value: this.studentLoanDeduction,
-        color: CHART_COLORS.studentLoans,
       },
-      {
-        label: 'Pension',
-        value: this.pensionDeduction,
-        color: CHART_COLORS.pension,
-      },
+      {label: 'Pension', value: this.pensionDeduction},
     ].filter(segment => segment.value > 0);
   }
 
@@ -656,27 +641,22 @@ export class TakeHomePay {
       {
         label: 'Take Home',
         value: this.net / divisor,
-        color: CHART_COLORS.takeHome,
       },
       {
         label: 'Income Tax',
         value: this.incomeTax / divisor,
-        color: CHART_COLORS.incomeTax,
       },
       {
         label: 'National Insurance',
         value: this.nationalInsurance / divisor,
-        color: CHART_COLORS.nationalInsurance,
       },
       {
         label: 'Student Loans',
         value: this.studentLoanDeduction / divisor,
-        color: CHART_COLORS.studentLoans,
       },
       {
         label: 'Pension',
         value: this.pensionDeduction / divisor,
-        color: CHART_COLORS.pension,
       },
     ].filter(segment => segment.value > 0);
   }

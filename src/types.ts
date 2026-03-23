@@ -78,11 +78,10 @@ export interface NIBreakdown {
   total: number;
 }
 
-/** Segment for doughnut chart visualization */
+/** Segment for chart visualization. */
 export interface ChartSegment {
   label: string;
   value: number;
-  color: string;
 }
 
 /**

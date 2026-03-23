@@ -13,7 +13,6 @@ export {
   availableTaxYears,
   disabledTaxYears,
 } from './taxYears';
-export {CHART_COLORS} from './chart-colors';
 export {
   SalaryType,
   Period,
