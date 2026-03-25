@@ -4,7 +4,7 @@ UK PAYE take-home pay calculator library.
 
 ## Commands
 
-- `npm run check` — lint + typecheck + test (run before committing)
+- `npm run check` — lint + typecheck + test
 - `npm run build` — compile to dist/
 - `npm test` — run vitest
 
@@ -22,5 +22,3 @@ UK PAYE take-home pay calculator library.
 
 - Vitest for testing (not Jest)
 - ESM-only (`"type": "module"`)
-- 88-char max line length
-- No AI attribution in commits
