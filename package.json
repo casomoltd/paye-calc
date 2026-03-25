@@ -23,7 +23,7 @@
     "test:watch": "vitest",
     "knip": "knip",
     "jscpd": "jscpd ./src",
-    "check": "npm run lint && npm run typecheck && npm run test",
+    "check": "npm run lint && npm run typecheck && npm run knip && npm run jscpd && npm run test",
     "prepare": "husky"
   },
   "repository": {
@@ -51,7 +51,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
-    "@casomoltd/tooling": "^0.2.0",
+    "@casomoltd/tooling": "^0.3.6",
     "@commitlint/cli": "^20.0.0",
     "@types/node": "^25.5.0",
     "eslint": "^9.0.0",
