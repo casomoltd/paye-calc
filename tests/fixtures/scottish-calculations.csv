@@ -49,3 +49,7 @@ label,taxYear,region,gross,pensionPercent,pensionBasis,expectedPension,expectedT
 £150k/Employer/5%,2024-25,scotland,150000,5,employer,7500,142500,0,56457.71,5010.6,0,81031.69
 £150k/SalSac/5%,2024-25,scotland,150000,5,salary_sacrifice,7500,142500,0,56457.71,4860.6,0,81181.69
 £150k/Personal/5%,2024-25,scotland,150000,5,personal,7500,150000,0,60057.71,5010.6,1875,79306.69
+£30k/baseline/0%,2026-27,scotland,30000,0,auto_enrolment,0,30000,12570,3451.07,1394.4,0,25154.53
+£50k/baseline/0%,2026-27,scotland,50000,0,auto_enrolment,0,50000,12570,8982.05,2994.4,0,38023.55
+£60k/baseline/0%,2026-27,scotland,60000,0,auto_enrolment,0,60000,12570,13182.05,3210.6,0,43607.35
+£100k/baseline/0%,2026-27,scotland,100000,0,auto_enrolment,0,100000,12570,30732.05,4010.6,0,65257.35

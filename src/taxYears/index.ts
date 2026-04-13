@@ -12,6 +12,10 @@ import {
   TaxYear2025,
   TaxYear2025Scotland,
 } from './TaxYear2025.js';
+import {
+  TaxYear2026,
+  TaxYear2026Scotland,
+} from './TaxYear2026.js';
 
 const taxYearConfigs: Record<
   TaxYear,
@@ -28,6 +32,10 @@ const taxYearConfigs: Record<
   [TAX_YEARS.Y2025_26]: {
     rUK: TaxYear2025,
     scotland: TaxYear2025Scotland,
+  },
+  [TAX_YEARS.Y2026_27]: {
+    rUK: TaxYear2026,
+    scotland: TaxYear2026Scotland,
   },
 };
 
@@ -47,6 +55,7 @@ export const availableTaxYears: TaxYear[] = [
   TAX_YEARS.Y2023_24,
   TAX_YEARS.Y2024_25,
   TAX_YEARS.Y2025_26,
+  TAX_YEARS.Y2026_27,
 ];
 
 /** Tax years that are disabled (not yet announced) */
