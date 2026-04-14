@@ -6,7 +6,6 @@ import {
   TAX_YEARS,
   StudentLoanPlan,
 } from '../types.js';
-import type {NHSPensionTier} from '../types.js';
 
 const YEAR = TAX_YEARS.Y2026_27;
 const DISPLAY_NAME = '2026-27';
@@ -43,17 +42,6 @@ const STUDENT_LOANS = {
   },
 } as const;
 
-// 6 bands, CPI-uplifted boundaries (rates unchanged)
-// Source: https://www.nhsbsa.nhs.uk/member-hub/cost-being-scheme
-const NHS_PENSION_TIERS: NHSPensionTier[] = [
-  {min: 0, max: 13259, rate: 0.052},
-  {min: 13260, max: 28854, rate: 0.065},
-  {min: 28855, max: 35155, rate: 0.083},
-  {min: 35156, max: 52778, rate: 0.098},
-  {min: 52779, max: 67668, rate: 0.107},
-  {min: 67669, max: Infinity, rate: 0.125},
-];
-
 /** rUK tax year 2026-27. */
 export const TaxYear2026: TaxYearConfigUk = {
   region: 'rUK',
@@ -85,7 +73,6 @@ export const TaxYear2026: TaxYearConfigUk = {
   nationalInsurance: NATIONAL_INSURANCE,
   qualifyingEarnings: QUALIFYING_EARNINGS,
   studentLoanThresholds: STUDENT_LOANS,
-  nhsPensionTiers: NHS_PENSION_TIERS,
 };
 
 /** Scottish tax year 2026-27 (6 bands). */
@@ -138,5 +125,4 @@ export const TaxYear2026Scotland: TaxYearConfigScotland =
     nationalInsurance: NATIONAL_INSURANCE,
     qualifyingEarnings: QUALIFYING_EARNINGS,
     studentLoanThresholds: STUDENT_LOANS,
-    nhsPensionTiers: null,
-  };
+    };

@@ -6,7 +6,6 @@ import {
   TAX_YEARS,
   StudentLoanPlan,
 } from '../types.js';
-import type {NHSPensionTier} from '../types.js';
 
 const YEAR = TAX_YEARS.Y2023_24;
 const DISPLAY_NAME = '2023-24';
@@ -41,22 +40,6 @@ const STUDENT_LOANS = {
   },
 } as const;
 
-// Pre-reform, 11 bands
-// Source: https://www.nhsemployers.org/system/files/2023-09/NHS-Pension-Scheme-member-contribution-rates-2023-4.pdf
-const NHS_PENSION_TIERS: NHSPensionTier[] = [
-  {min: 0, max: 13246, rate: 0.051},
-  {min: 13247, max: 17673, rate: 0.057},
-  {min: 17674, max: 24022, rate: 0.061},
-  {min: 24023, max: 25146, rate: 0.068},
-  {min: 25147, max: 29635, rate: 0.077},
-  {min: 29636, max: 30638, rate: 0.088},
-  {min: 30639, max: 45996, rate: 0.098},
-  {min: 45997, max: 51708, rate: 0.100},
-  {min: 51709, max: 58972, rate: 0.116},
-  {min: 58973, max: 75632, rate: 0.125},
-  {min: 75633, max: Infinity, rate: 0.135},
-];
-
 /** rUK tax year 2023-24. */
 export const TaxYear2023: TaxYearConfigUk = {
   region: 'rUK',
@@ -88,7 +71,6 @@ export const TaxYear2023: TaxYearConfigUk = {
   nationalInsurance: NATIONAL_INSURANCE,
   qualifyingEarnings: QUALIFYING_EARNINGS,
   studentLoanThresholds: STUDENT_LOANS,
-  nhsPensionTiers: NHS_PENSION_TIERS,
 };
 
 /** Scottish tax year 2023-24 (5 bands). */
@@ -135,5 +117,4 @@ export const TaxYear2023Scotland: TaxYearConfigScotland =
     nationalInsurance: NATIONAL_INSURANCE,
     qualifyingEarnings: QUALIFYING_EARNINGS,
     studentLoanThresholds: STUDENT_LOANS,
-    nhsPensionTiers: null,
-  };
+    };

@@ -38,7 +38,10 @@ function parseCsv(filePath: string): CsvRow[] {
 const __dirname = path.dirname(
   fileURLToPath(import.meta.url),
 );
-const FIXTURES = path.join(__dirname, 'fixtures');
+const FIXTURES = path.join(
+  __dirname, '..', 'data', 'artefacts',
+  'paye-calc', 'fixtures',
+);
 
 // ─── Annual calculations ─────────────────────────
 
@@ -128,13 +131,13 @@ describe('regression: annual calculations', () => {
   });
 });
 
-// ─── NHS Pension calculations ────────────────────
+// ─── NHS Pension calculations (employer basis) ──
 
 const nhsCases = parseCsv(
   path.join(FIXTURES, 'nhs-pension-calculations.csv'),
 );
 
-describe('regression: NHS pension', () => {
+describe('regression: NHS pension (employer)', () => {
   it.each(nhsCases)('$label', (tc: CsvRow) => {
     const model = new TakeHomePay(
       tc.taxYear as TaxYear,
@@ -142,6 +145,9 @@ describe('regression: NHS pension', () => {
     );
     model.setPensionBasis(
       tc.pensionBasis as PensionBasis,
+    );
+    model.setPension(
+      PensionPercent(Number(tc.pensionPercent)),
     );
     model.setSalary(GrossAnnual(Number(tc.gross)));
 

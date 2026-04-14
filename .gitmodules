@@ -1,0 +1,3 @@
+[submodule "data/artefacts"]
+	path = data/artefacts
+	url = https://github.com/casomoltd/artefacts.git

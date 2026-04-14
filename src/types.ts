@@ -30,7 +30,6 @@ export enum PensionBasis {
   Employer = 'employer',
   SalarySacrifice = 'salary_sacrifice',
   Personal = 'personal',
-  NHSPension = 'nhs_pension',
 }
 
 /** Student loan repayment plan type */
@@ -76,17 +75,6 @@ export interface NIBreakdown {
   upperRateAmount: number;
   upperRateTax: number;
   total: number;
-}
-
-/**
- * NHS Pension tier band — flat rate applied to entire
- * salary based on which band the annual pensionable
- * pay falls into.
- */
-export interface NHSPensionTier {
-  min: number;
-  max: number;
-  rate: number;
 }
 
 /** Repayment threshold and rate for a student loan */

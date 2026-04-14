@@ -16,7 +16,7 @@ UK PAYE take-home pay calculator library.
 - `src/taxYears/` — per-year config data
 - `src/types.ts` — shared types and constants
 - `src/chart-colors.ts` — chart colors from design tokens
-- `tests/fixtures/*.csv` — regression test golden data
+- `data/artefacts/` — submodule with regression test fixtures
 
 ## Conventions
 

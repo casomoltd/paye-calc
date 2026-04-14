@@ -1,6 +1,5 @@
 import type {
   TaxBand,
-  NHSPensionTier,
   NIThresholds,
   StudentLoanPlan,
   StudentLoanThreshold,
@@ -48,12 +47,6 @@ interface TaxYearConfigBase {
     StudentLoanPlan,
     StudentLoanThreshold | null
   >;
-
-  /**
-   * NHS Pension tiered contribution rates.
-   * England/Wales only — null for Scotland (separate scheme).
-   */
-  nhsPensionTiers: NHSPensionTier[] | null;
 
   /** Display name for UI */
   displayName: string;

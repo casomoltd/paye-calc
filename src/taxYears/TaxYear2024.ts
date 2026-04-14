@@ -6,7 +6,6 @@ import {
   TAX_YEARS,
   StudentLoanPlan,
 } from '../types.js';
-import type {NHSPensionTier} from '../types.js';
 
 const YEAR = TAX_YEARS.Y2024_25;
 const DISPLAY_NAME = '2024-25';
@@ -41,17 +40,6 @@ const STUDENT_LOANS = {
   },
 } as const;
 
-// Post-reform, 6 bands
-// Source: https://www.nhsbsa.nhs.uk/contributions-nhs-pension-scheme-are-changing
-const NHS_PENSION_TIERS: NHSPensionTier[] = [
-  {min: 0, max: 13259, rate: 0.052},
-  {min: 13260, max: 26831, rate: 0.065},
-  {min: 26832, max: 32691, rate: 0.083},
-  {min: 32692, max: 49078, rate: 0.098},
-  {min: 49079, max: 62924, rate: 0.107},
-  {min: 62925, max: Infinity, rate: 0.125},
-];
-
 /** rUK tax year 2024-25. */
 export const TaxYear2024: TaxYearConfigUk = {
   region: 'rUK',
@@ -83,7 +71,6 @@ export const TaxYear2024: TaxYearConfigUk = {
   nationalInsurance: NATIONAL_INSURANCE,
   qualifyingEarnings: QUALIFYING_EARNINGS,
   studentLoanThresholds: STUDENT_LOANS,
-  nhsPensionTiers: NHS_PENSION_TIERS,
 };
 
 /** Scottish tax year 2024-25 (6 bands). */
@@ -136,5 +123,4 @@ export const TaxYear2024Scotland: TaxYearConfigScotland =
     nationalInsurance: NATIONAL_INSURANCE,
     qualifyingEarnings: QUALIFYING_EARNINGS,
     studentLoanThresholds: STUDENT_LOANS,
-    nhsPensionTiers: null,
-  };
+    };

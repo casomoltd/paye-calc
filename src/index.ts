@@ -41,7 +41,6 @@ export type {
   TaxBandBreakdown,
   NIThresholds,
   NIBreakdown,
-  NHSPensionTier,
   StudentLoanThreshold,
   StudentLoanBreakdown,
 } from './types.js';

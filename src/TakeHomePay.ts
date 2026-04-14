@@ -12,7 +12,6 @@ import {
   PensionType,
   PensionPercent,
   PensionBasis,
-  NHSPensionTier,
   StudentLoanPlan,
   StudentLoanBreakdown,
 } from './types.js';
@@ -168,12 +167,6 @@ export class TakeHomePay {
    * qualifying earnings. Other schemes use full gross.
    */
   get pensionDeduction(): number {
-    if (this._pensionBasis === PensionBasis.NHSPension) {
-      return Math.round(
-        this._grossAnnual * this._nhsPensionRate,
-      );
-    }
-
     const earningsBase = this._pensionEarningsBase;
 
     if (this._pension.type === PensionType.Percent) {
@@ -197,60 +190,6 @@ export class TakeHomePay {
       );
     }
     return this._grossAnnual;
-  }
-
-  private get _nhsPensionRate(): number {
-    const tiers = this._config.nhsPensionTiers;
-    if (!tiers) return 0;
-
-    for (const tier of tiers) {
-      if (this._grossAnnual <= tier.max) {
-        return tier.rate;
-      }
-    }
-    return 0;
-  }
-
-  /**
-   * The NHS pension tier band matching the current
-   * salary. Returns null if not selected/available.
-   */
-  get nhsPensionTier(): NHSPensionTier | null {
-    if (
-      this._pensionBasis !== PensionBasis.NHSPension
-    ) {
-      return null;
-    }
-    const tiers = this._config.nhsPensionTiers;
-    if (!tiers) return null;
-
-    for (const tier of tiers) {
-      if (this._grossAnnual <= tier.max) {
-        return tier;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * The 1-based band number for the matching NHS
-   * pension tier. Returns 0 if not selected/available.
-   */
-  get nhsPensionBand(): number {
-    if (
-      this._pensionBasis !== PensionBasis.NHSPension
-    ) {
-      return 0;
-    }
-    const tiers = this._config.nhsPensionTiers;
-    if (!tiers) return 0;
-
-    for (let i = 0; i < tiers.length; i++) {
-      if (this._grossAnnual <= tiers[i].max) {
-        return i + 1;
-      }
-    }
-    return 0;
   }
 
   /**
@@ -636,9 +575,6 @@ export class TakeHomePay {
       [PensionBasis.Personal]:
         'Personal pension / relief at source ' +
         '(provider reclaims basic-rate relief)',
-      [PensionBasis.NHSPension]:
-        'NHS Pension (tiered contribution rate, ' +
-        'reduces tax but not NI)',
     };
 
     const STUDENT_LOAN_LABELS: Record<
