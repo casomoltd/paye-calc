@@ -39,8 +39,7 @@ const __dirname = path.dirname(
   fileURLToPath(import.meta.url),
 );
 const FIXTURES = path.join(
-  __dirname, '..', 'data', 'artefacts',
-  'paye-calc', 'fixtures',
+  __dirname, 'fixtures',
 );
 
 // ─── Annual calculations ─────────────────────────
