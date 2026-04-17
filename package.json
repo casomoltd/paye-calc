@@ -51,7 +51,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "devDependencies": {
-    "@casomoltd/tooling": "^0.3.6",
+    "@casomoltd/tooling": "^0.5.16",
     "@commitlint/cli": "^20.0.0",
     "@types/node": "^25.5.0",
     "eslint": "^9.0.0",
