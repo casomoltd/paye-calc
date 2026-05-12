@@ -72,6 +72,15 @@ export type TaxYearConfig =
   | TaxYearConfigUk
   | TaxYearConfigScotland;
 
+/** Higher-rate income tax threshold for rUK.
+ *  personalAllowance + basic rate band width. */
+export function higherRateThreshold(
+  config: TaxYearConfig,
+): number {
+  return config.personalAllowance
+    + config.incomeTaxBands[0].max;
+}
+
 /**
  * Calculate the effective Personal Allowance after taper.
  * PA reduces by £1 for every £2 of income over the taper
