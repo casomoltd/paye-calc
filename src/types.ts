@@ -101,7 +101,15 @@ export type TaxYear =
 /** UK nation for the region picker. */
 export type Nation = keyof typeof NATIONS;
 
-/** Tax region discriminant. */
+/**
+ * Tax region discriminant.
+ *
+ * `'rUK'` — "rest of UK" in HMRC terminology.
+ * England, Wales, and Northern Ireland share the
+ * same income tax bands and rates. Scotland sets
+ * its own via the Scottish Parliament, so it is a
+ * separate region.
+ */
 export type TaxRegion =
   (typeof TAX_REGIONS)[keyof typeof TAX_REGIONS];
 
@@ -159,8 +167,14 @@ export const NATION_KEYS = {
 
 /**
  * Tax region determines which income tax bands apply.
- * rUK = England, Wales, Northern Ireland (same bands).
- * scotland = Scottish income tax bands.
+ *
+ * `rUK` ("rest of UK") is HMRC's term for England,
+ * Wales, and Northern Ireland, which share the same
+ * income tax rates. Scotland sets its own rates via
+ * the Scottish Parliament and has six brackets
+ * (starter, basic, intermediate, higher, advanced,
+ * top) compared to rUK's three (basic, higher,
+ * additional).
  */
 export const TAX_REGIONS = {
   rUK: 'rUK',
