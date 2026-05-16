@@ -73,6 +73,7 @@ export const TaxYear2026: TaxYearConfigUk = {
   nationalInsurance: NATIONAL_INSURANCE,
   qualifyingEarnings: QUALIFYING_EARNINGS,
   studentLoanThresholds: STUDENT_LOANS,
+  standardWeeklyHours: 37.5,
 };
 
 /** Scottish tax year 2026-27 (6 bands). */
@@ -124,5 +125,6 @@ export const TaxYear2026Scotland: TaxYearConfigScotland =
     ],
     nationalInsurance: NATIONAL_INSURANCE,
     qualifyingEarnings: QUALIFYING_EARNINGS,
+    standardWeeklyHours: 36,
     studentLoanThresholds: STUDENT_LOANS,
     };

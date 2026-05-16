@@ -10,6 +10,8 @@ import {
   StudentLoanPlan,
 } from '../src/types';
 import type {TaxYear, TaxRegion} from '../src/types';
+import {getTaxYearConfig} from '../src/taxYears';
+import {hoursPerYear} from '../src/TaxYearConfig';
 
 // ─── CSV parsing ─────────────────────────────────
 
@@ -325,6 +327,64 @@ describe('regression: Scottish income tax', () => {
       );
     }
   });
+});
+
+// ─── Hourly rate crosscheck ─────────────────────
+
+const hourlyCases = parseCsv(
+  path.join(
+    FIXTURES, 'hourly-rate-crosscheck.csv',
+  ),
+);
+
+describe('regression: hourly rate', () => {
+  it.each(hourlyCases)(
+    '$label',
+    (tc: CsvRow) => {
+      const cfg = getTaxYearConfig(
+        tc.taxYear as TaxYear,
+        tc.region as TaxRegion,
+      );
+      const hpy = hoursPerYear(cfg);
+      const hourly = Number(tc.gross) / hpy;
+
+      const checks: [string, number, number][] = [
+        [
+          'weeklyHours',
+          cfg.standardWeeklyHours,
+          Number(tc.expectedWeeklyHours),
+        ],
+        [
+          'hoursPerYear',
+          hpy,
+          Number(tc.expectedHoursPerYear),
+        ],
+        [
+          'hourlyGross',
+          hourly,
+          Number(tc.expectedHourlyGross),
+        ],
+      ];
+
+      const failures = checks
+        .filter(
+          ([, actual, expected]) =>
+            Math.abs(actual - expected) >= 0.005,
+        )
+        .map(
+          ([field, actual, expected]) =>
+            `${field}: expected ${expected}` +
+            `, got ${actual}`,
+        );
+
+      if (failures.length > 0) {
+        throw new Error(
+          `${tc.label}:\n  ` +
+          `${failures.join('\n  ')}`,
+        );
+      }
+    },
+  );
 });
 
 // ─── HMRC NI crosscheck ─────────────────────────

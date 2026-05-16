@@ -50,6 +50,13 @@ interface TaxYearConfigBase {
 
   /** Display name for UI */
   displayName: string;
+
+  /**
+   * Standard contracted weekly hours for the region.
+   * rUK: 37.5 (NHS AfC standard).
+   * Scotland: 36 from 2026-27 (MSG AfC framework).
+   */
+  standardWeeklyHours: number;
 }
 
 /**
@@ -71,6 +78,13 @@ export interface TaxYearConfigScotland
 export type TaxYearConfig =
   | TaxYearConfigUk
   | TaxYearConfigScotland;
+
+/** Annual contracted hours: weekly hours x 52. */
+export function hoursPerYear(
+  config: TaxYearConfig,
+): number {
+  return config.standardWeeklyHours * 52;
+}
 
 /** Higher-rate income tax threshold for rUK.
  *  personalAllowance + basic rate band width. */

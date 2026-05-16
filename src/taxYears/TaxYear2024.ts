@@ -11,6 +11,7 @@ const YEAR = TAX_YEARS.Y2024_25;
 const DISPLAY_NAME = '2024-25';
 const PERSONAL_ALLOWANCE = 12570;
 const PERSONAL_ALLOWANCE_TAPER_START = 100000;
+const STANDARD_WEEKLY_HOURS = 37.5;
 
 const NATIONAL_INSURANCE = {
   primaryThreshold: 12570,
@@ -71,6 +72,7 @@ export const TaxYear2024: TaxYearConfigUk = {
   nationalInsurance: NATIONAL_INSURANCE,
   qualifyingEarnings: QUALIFYING_EARNINGS,
   studentLoanThresholds: STUDENT_LOANS,
+  standardWeeklyHours: STANDARD_WEEKLY_HOURS,
 };
 
 /** Scottish tax year 2024-25 (6 bands). */
@@ -123,4 +125,5 @@ export const TaxYear2024Scotland: TaxYearConfigScotland =
     nationalInsurance: NATIONAL_INSURANCE,
     qualifyingEarnings: QUALIFYING_EARNINGS,
     studentLoanThresholds: STUDENT_LOANS,
+    standardWeeklyHours: STANDARD_WEEKLY_HOURS,
     };

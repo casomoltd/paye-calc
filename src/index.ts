@@ -8,6 +8,7 @@ export type {
 export {
   calculateTaperedPersonalAllowance,
   higherRateThreshold,
+  hoursPerYear,
 } from './TaxYearConfig.js';
 export {
   getTaxYearConfig,
