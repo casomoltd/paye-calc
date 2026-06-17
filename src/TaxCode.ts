@@ -8,6 +8,9 @@
  * @see https://www.gov.uk/tax-codes/what-your-tax-code-means
  */
 
+import {NATION_KEYS} from './types';
+import type {Nation} from './types';
+
 /** How income tax should be calculated for this code. */
 export enum TaxStrategy {
   /** Standard progressive bands (most codes). */
@@ -90,6 +93,26 @@ export class TaxCode {
     this.personalAllowance = personalAllowance;
     this.strategy = strategy;
     this.prefix = prefix;
+  }
+
+  /**
+   * The UK nation this code's prefix declares: Scotland for
+   * an `S` prefix, Wales for a `C` prefix. Null when the
+   * code carries no prefix — England and Northern Ireland
+   * share rUK with no prefix, so the code names no single
+   * nation. Translating the prefix is the code's own job;
+   * callers compare this against a chosen region rather than
+   * re-deriving the mapping from the raw letter.
+   */
+  get nation(): Nation | null {
+    switch (this.prefix) {
+      case TAX_CODE_PREFIX.Scotland:
+        return NATION_KEYS.scotland;
+      case TAX_CODE_PREFIX.Wales:
+        return NATION_KEYS.wales;
+      default:
+        return null;
+    }
   }
 
   /**

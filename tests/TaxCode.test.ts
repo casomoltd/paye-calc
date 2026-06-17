@@ -128,6 +128,27 @@ describe('TaxCode', () => {
     });
   });
 
+  describe('nation — prefix translated to a UK nation', () => {
+    it.each([
+      ['S1257L', 'scotland'],
+      ['SBR', 'scotland'],
+      ['SK100', 'scotland'],
+      ['C1257L', 'wales'],
+      ['CBR', 'wales'],
+    ])('%s → nation=%s', (code, nation) => {
+      expect(TaxCode.parse(code)!.nation).toBe(nation);
+    });
+
+    it.each([
+      ['1257L'],
+      ['BR'],
+      ['K100'],
+      ['NT'],
+    ])('%s → nation=null (no prefix)', (code) => {
+      expect(TaxCode.parse(code)!.nation).toBeNull();
+    });
+  });
+
   describe('parse — emergency suffixes', () => {
     it('1257L W1 → strips W1', () => {
       const r = TaxCode.parse('1257L W1');
