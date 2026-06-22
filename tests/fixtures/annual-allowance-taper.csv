@@ -1,0 +1,12 @@
+label,inputMode,taxYear,adjustedIncome,thresholdIncome,netIncome,memberContributions,rasContributions,employerContributions,newSalarySacrifice,expectedThresholdIncome,expectedAdjustedIncome,expectedAvailableAA
+no-taper-below-adjusted,direct,2025-26,250000,210000,,,,,,,,60000
+gate-TI-at-limit,direct,2025-26,300000,200000,,,,,,,,60000
+gate-TI-below-limit,direct,2025-26,400000,199999,,,,,,,,60000
+exact-260k-entry,direct,2025-26,260000,210000,,,,,,,,60000
+first-taper,direct,2025-26,260002,210000,,,,,,,,59999
+mid-taper-300k,direct,2025-26,300000,210000,,,,,,,,40000
+round-down-odd,direct,2025-26,277979,210000,,,,,,,,51011
+floor-at-360k,direct,2025-26,360000,210000,,,,,,,,10000
+below-floor-400k,direct,2025-26,400000,210000,,,,,,,,10000
+ptm-160k-rebased,direct,2025-26,270000,210000,,,,,,,,55000
+jon-income,components,2025-26,,,144500,14000,5400,20000,0,139100,178500,60000

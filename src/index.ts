@@ -4,9 +4,14 @@ export type {
   TaxYearConfig,
   TaxYearConfigUk,
   TaxYearConfigScotland,
+  AnnualAllowanceConfig,
+  AnnualAllowanceIncomeInputs,
 } from './TaxYearConfig.js';
 export {
   calculateTaperedPersonalAllowance,
+  calculateTaperedAnnualAllowance,
+  calculateThresholdIncome,
+  calculateAdjustedIncome,
   higherRateThreshold,
   hoursPerYear,
 } from './TaxYearConfig.js';
@@ -21,6 +26,7 @@ export {
   PensionType,
   PensionBasis,
   StudentLoanPlan,
+  DB_PENSION_INPUT_MULTIPLIER,
   TAX_YEARS,
   NATIONS,
   NATION_KEYS,

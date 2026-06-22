@@ -14,10 +14,15 @@ import {
   PensionBasis,
   StudentLoanPlan,
   StudentLoanBreakdown,
+  DB_PENSION_INPUT_MULTIPLIER,
 } from './types.js';
 import {
   TaxYearConfig,
+  AnnualAllowanceIncomeInputs,
   calculateTaperedPersonalAllowance,
+  calculateTaperedAnnualAllowance,
+  calculateThresholdIncome,
+  calculateAdjustedIncome,
 } from './TaxYearConfig.js';
 import {getTaxYearConfig} from './taxYears/index.js';
 import {TaxCode, TaxStrategy} from './TaxCode.js';
@@ -42,6 +47,13 @@ export class TakeHomePay {
   private _taxCode: TaxCode | null = null;
   private _config: TaxYearConfig;
   private _region: TaxRegion;
+  // Annual-allowance inputs — all default to neutral so
+  // the AA getters are purely additive (take-home pay is
+  // unaffected unless these are set).
+  private _employerContribution: number = 0;
+  private _dbAnnualAccrual: number = 0;
+  private _otherTaxableIncome: number = 0;
+  private _mpaaTriggered: boolean = false;
 
   /**
    * Creates a new TakeHomePay calculator.
@@ -152,6 +164,45 @@ export class TakeHomePay {
       this._config.year as TaxYear,
       region,
     );
+  }
+
+  /**
+   * Sets the annual employer pension contribution (for a
+   * defined-contribution scheme), used only for the
+   * annual-allowance adjusted income and pension input.
+   * Does not affect take-home pay.
+   */
+  setEmployerContribution(amount: number): void {
+    this._employerContribution = Math.max(0, amount);
+  }
+
+  /**
+   * Sets the annual defined-benefit pension accrual. The
+   * pension input feeding adjusted income is 16× this
+   * figure (DB_PENSION_INPUT_MULTIPLIER). Does not affect
+   * take-home pay.
+   */
+  setDbAnnualAccrual(amount: number): void {
+    this._dbAnnualAccrual = Math.max(0, amount);
+  }
+
+  /**
+   * Sets other taxable income (e.g. self-employment,
+   * savings, dividends) added to net income for the
+   * annual-allowance tests. Does not affect PAYE
+   * take-home pay on the employment.
+   */
+  setOtherTaxableIncome(amount: number): void {
+    this._otherTaxableIncome = Math.max(0, amount);
+  }
+
+  /**
+   * Flags that the Money Purchase Annual Allowance applies
+   * (defined-contribution benefits flexibly accessed),
+   * which caps the available allowance at the MPAA.
+   */
+  setMpaaTriggered(triggered: boolean): void {
+    this._mpaaTriggered = triggered;
   }
 
   // ─── Getters ─────────────────────────────────────
@@ -393,6 +444,109 @@ export class TakeHomePay {
     this._grossAnnual = originalGross;
 
     return (1 - (newNet - currentNet)) * 100;
+  }
+
+  // ─── Annual allowance ────────────────────────────
+
+  /**
+   * Member pension contributions added back for adjusted
+   * income — net-pay schemes only. Relief-at-source
+   * (personal) affects threshold income instead, and
+   * salary sacrifice is treated as an employer
+   * contribution; neither is a member add-back here.
+   */
+  private get _aaMemberContributions(): number {
+    const isNetPay =
+      this._pensionBasis === PensionBasis.Employer ||
+      this._pensionBasis === PensionBasis.AutoEnrolment;
+    return isNetPay ? this.pensionDeduction : 0;
+  }
+
+  private get _aaIncomeInputs(): AnnualAllowanceIncomeInputs {
+    const dbInput =
+      this._dbAnnualAccrual * DB_PENSION_INPUT_MULTIPLIER;
+    const member = this._aaMemberContributions;
+
+    const ras =
+      this._pensionBasis === PensionBasis.Personal
+        ? this.pensionDeduction
+        : 0;
+    const salarySacrifice =
+      this._pensionBasis === PensionBasis.SalarySacrifice
+        ? this.pensionDeduction
+        : 0;
+
+    // Employer element = explicit employer contribution
+    // + salary sacrifice (an employer contribution) + the
+    // DB employer element (DB input − member contribution).
+    const employer =
+      this._employerContribution +
+      salarySacrifice +
+      Math.max(0, dbInput - member);
+
+    return {
+      netIncome:
+        this.taxableGross + this._otherTaxableIncome,
+      memberContributions: member,
+      employerContributions: employer,
+      reliefAtSourceContributions: ras,
+      newSalarySacrifice: salarySacrifice,
+    };
+  }
+
+  /** Threshold income for the annual-allowance taper. */
+  get thresholdIncome(): number {
+    return calculateThresholdIncome(this._aaIncomeInputs);
+  }
+
+  /** Adjusted income for the annual-allowance taper. */
+  get adjustedIncome(): number {
+    return calculateAdjustedIncome(this._aaIncomeInputs);
+  }
+
+  /**
+   * Available annual allowance after taper. Capped at the
+   * MPAA when flexibly-accessed benefits are flagged.
+   */
+  get availableAnnualAllowance(): number {
+    if (this._mpaaTriggered) {
+      return this._config.annualAllowance.moneyPurchase;
+    }
+    return calculateTaperedAnnualAllowance(
+      this.adjustedIncome,
+      this.thresholdIncome,
+      this._config,
+    );
+  }
+
+  /**
+   * Total pension input for the year. A defined-benefit
+   * accrual is measured as 16× the accrual; otherwise it
+   * is member plus employer contributions.
+   */
+  get pensionInput(): number {
+    const dbInput =
+      this._dbAnnualAccrual * DB_PENSION_INPUT_MULTIPLIER;
+    if (dbInput > 0) {
+      return dbInput;
+    }
+    const member =
+      this._pensionBasis === PensionBasis.None
+        ? 0
+        : this.pensionDeduction;
+    return member + this._employerContribution;
+  }
+
+  /**
+   * Pension savings above the available annual allowance,
+   * which attract the annual-allowance charge (0 if within
+   * allowance).
+   */
+  get annualAllowanceExcess(): number {
+    return Math.max(
+      0,
+      this.pensionInput - this.availableAnnualAllowance,
+    );
   }
 
   // ─── Display Values (adjusted for period) ────────
