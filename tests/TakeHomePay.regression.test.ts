@@ -11,7 +11,12 @@ import {
 } from '../src/types';
 import type {TaxYear, TaxRegion} from '../src/types';
 import {getTaxYearConfig} from '../src/taxYears';
-import {hoursPerYear} from '../src/TaxYearConfig';
+import {
+  hoursPerYear,
+  calculateTaperedAnnualAllowance,
+  calculateThresholdIncome,
+  calculateAdjustedIncome,
+} from '../src/TaxYearConfig';
 
 // ─── CSV parsing ─────────────────────────────────
 
@@ -385,6 +390,75 @@ describe('regression: hourly rate', () => {
       }
     },
   );
+});
+
+// ─── Annual allowance taper ──────────────────────
+
+const aaCases = parseCsv(
+  path.join(FIXTURES, 'annual-allowance-taper.csv'),
+);
+
+describe('regression: annual allowance taper', () => {
+  it.each(aaCases)('$label', (tc: CsvRow) => {
+    const cfg = getTaxYearConfig(tc.taxYear as TaxYear);
+
+    let adjusted = Number(tc.adjustedIncome);
+    let threshold = Number(tc.thresholdIncome);
+    const checks: [string, number, number][] = [];
+
+    if (tc.inputMode === 'components') {
+      const inputs = {
+        netIncome: Number(tc.netIncome),
+        memberContributions:
+          Number(tc.memberContributions),
+        employerContributions:
+          Number(tc.employerContributions),
+        reliefAtSourceContributions:
+          Number(tc.rasContributions),
+        newSalarySacrifice:
+          Number(tc.newSalarySacrifice),
+      };
+      threshold = calculateThresholdIncome(inputs);
+      adjusted = calculateAdjustedIncome(inputs);
+      checks.push(
+        [
+          'thresholdIncome',
+          threshold,
+          Number(tc.expectedThresholdIncome),
+        ],
+        [
+          'adjustedIncome',
+          adjusted,
+          Number(tc.expectedAdjustedIncome),
+        ],
+      );
+    }
+
+    checks.push([
+      'availableAA',
+      calculateTaperedAnnualAllowance(
+        adjusted, threshold, cfg,
+      ),
+      Number(tc.expectedAvailableAA),
+    ]);
+
+    const failures = checks
+      .filter(
+        ([, actual, expected]) =>
+          Math.abs(actual - expected) >= 0.005,
+      )
+      .map(
+        ([field, actual, expected]) =>
+          `${field}: expected ${expected}` +
+          `, got ${actual}`,
+      );
+
+    if (failures.length > 0) {
+      throw new Error(
+        `${tc.label}:\n  ${failures.join('\n  ')}`,
+      );
+    }
+  });
 });
 
 // ─── HMRC NI crosscheck ─────────────────────────

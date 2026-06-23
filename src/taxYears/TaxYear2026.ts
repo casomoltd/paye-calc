@@ -42,6 +42,18 @@ const STUDENT_LOANS = {
   },
 } as const;
 
+// Pension annual allowance — gov.uk, HMRC PTM057100.
+// £60k standard, £10k MPAA, £260k adjusted-income limit,
+// £200k threshold-income gate, £10k floor — unchanged
+// across 2023-24 to 2026-27.
+const ANNUAL_ALLOWANCE = {
+  standard: 60000,
+  moneyPurchase: 10000,
+  adjustedIncomeLimit: 260000,
+  thresholdIncomeLimit: 200000,
+  taperFloor: 10000,
+} as const;
+
 /** rUK tax year 2026-27. */
 export const TaxYear2026: TaxYearConfigUk = {
   region: 'rUK',
@@ -74,6 +86,7 @@ export const TaxYear2026: TaxYearConfigUk = {
   qualifyingEarnings: QUALIFYING_EARNINGS,
   studentLoanThresholds: STUDENT_LOANS,
   standardWeeklyHours: 37.5,
+  annualAllowance: ANNUAL_ALLOWANCE,
 };
 
 /** Scottish tax year 2026-27 (6 bands). */
@@ -127,4 +140,5 @@ export const TaxYear2026Scotland: TaxYearConfigScotland =
     qualifyingEarnings: QUALIFYING_EARNINGS,
     standardWeeklyHours: 36,
     studentLoanThresholds: STUDENT_LOANS,
+    annualAllowance: ANNUAL_ALLOWANCE,
     };

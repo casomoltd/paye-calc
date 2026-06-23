@@ -1,7 +1,7 @@
 # @casomoltd/paye-calc
 
 UK PAYE take-home pay calculator. Handles income tax, National
-Insurance, pensions, and student loans for 2023-24 through 2025-26.
+Insurance, pensions, and student loans for 2023-24 through 2026-27.
 
 ## Install
 
@@ -9,11 +9,7 @@ Insurance, pensions, and student loans for 2023-24 through 2025-26.
 npm install @casomoltd/paye-calc
 ```
 
-Published to GitHub Packages. Add to your `.npmrc`:
-
-```
-@casomoltd:registry=https://npm.pkg.github.com
-```
+Public on the npm registry — no auth or `.npmrc` config needed.
 
 ## Usage
 
@@ -78,6 +74,7 @@ calc.gross;                // gross needed for £35k net
 | 2023-24 | Yes | Yes      |
 | 2024-25 | Yes | Yes      |
 | 2025-26 | Yes | Yes      |
+| 2026-27 | Yes | Yes      |
 
 ## Development
 

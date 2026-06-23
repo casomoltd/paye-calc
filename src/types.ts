@@ -189,6 +189,16 @@ export const TAX_BAND_NAMES = {
   topRate: 'Top Rate',
 } as const;
 
+/**
+ * Defined-benefit pension input multiplier. The pension
+ * input amount for a DB scheme — the figure feeding the
+ * annual-allowance adjusted-income test — is 16× the
+ * annual pension accrual (plus any lump-sum growth, not
+ * modelled here).
+ * Source: HMRC PTM053301 (DB pension input amount).
+ */
+export const DB_PENSION_INPUT_MULTIPLIER = 16;
+
 /** Human-readable short labels for period segments */
 export const PERIOD_LABELS: Record<Period, string> = {
   [Period.Weekly]: 'Week',
