@@ -8,8 +8,8 @@
  * @see https://www.gov.uk/tax-codes/what-your-tax-code-means
  */
 
-import {NATION_KEYS} from './types';
-import type {Nation} from './types';
+import {NATION_KEYS} from './types.js';
+import type {Nation} from './types.js';
 
 /** How income tax should be calculated for this code. */
 export enum TaxStrategy {
