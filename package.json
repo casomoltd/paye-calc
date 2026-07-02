@@ -25,7 +25,8 @@
     "test:watch": "vitest",
     "knip": "knip",
     "jscpd": "jscpd ./src",
-    "check": "npm run lint && npm run typecheck && npm run knip && npm run jscpd && npm run test",
+    "lint:md": "remark --frail --quiet --no-stdout --rc-path node_modules/@casomoltd/tooling/bin/skills-lint.config.mjs docs CLAUDE.md",
+    "check": "npm run lint && npm run typecheck && npm run knip && npm run jscpd && npm run test && npm run lint:md",
     "prepare": "husky"
   },
   "repository": {
@@ -55,7 +56,7 @@
     "provenance": true
   },
   "devDependencies": {
-    "@casomoltd/tooling": "git+https://github.com/casomoltd/tooling.git#semver:^0.10.0",
+    "@casomoltd/tooling": "github:casomoltd/tooling#semver:^0.17.0",
     "@commitlint/cli": "^20.0.0",
     "@types/node": "^25.5.0",
     "eslint": "^9.0.0",
@@ -64,6 +65,10 @@
     "jscpd": "^4.0.0",
     "knip": "^5.0.0",
     "prettier": "^3.0.0",
+    "remark-cli": "^12.0.1",
+    "remark-frontmatter": "^5.0.0",
+    "remark-lint-frontmatter-schema": "^3.15.4",
+    "remark-validate-links": "^13.1.0",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.0.0",
     "vitest": "^3.0.0"

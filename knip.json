@@ -1,4 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "ignoreDependencies": ["prettier"]
+  "ignoreDependencies": [
+    "prettier",
+    "remark-frontmatter",
+    "remark-validate-links",
+    "remark-lint-frontmatter-schema"
+  ]
 }
