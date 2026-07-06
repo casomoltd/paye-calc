@@ -28,6 +28,15 @@ import {getTaxYearConfig} from './taxYears/index.js';
 import {TaxCode, TaxStrategy} from './TaxCode.js';
 
 /**
+ * Relief-at-source (personal) pension contributions are
+ * topped up by HMRC at the 20% basic rate, regardless of
+ * the saver's nation or marginal band. This factor grosses
+ * a net contribution up to include that relief:
+ * 0.20 / (1 - 0.20).
+ */
+const BASIC_RATE_RELIEF_GROSS_UP = 0.25;
+
+/**
  * TakeHomePay model - calculates UK PAYE take-home pay.
  *
  * Handles:
@@ -391,7 +400,9 @@ export class TakeHomePay {
     }
     return (
       Math.round(
-        this.pensionDeduction * 0.25 * 100,
+        this.pensionDeduction *
+          BASIC_RATE_RELIEF_GROSS_UP *
+          100,
       ) / 100
     );
   }
@@ -446,13 +457,27 @@ export class TakeHomePay {
   /** Marginal tax rate (rate on next £1 of income). */
   get marginalTaxRate(): number {
     const currentNet = this.net;
-    const originalGross = this._grossAnnual;
-
-    this._grossAnnual = originalGross + 1;
-    const newNet = this.net;
-    this._grossAnnual = originalGross;
-
+    const newNet = this._netAtGross(
+      this._grossAnnual + 1,
+    );
     return (1 - (newNet - currentNet)) * 100;
+  }
+
+  /**
+   * Net take-home at a hypothetical gross, restoring the
+   * original gross afterwards even on error. The class
+   * probes gross transiently in a couple of places (here
+   * and the net-to-gross solver); this keeps that probe in
+   * one exception-safe place rather than inline mutation.
+   */
+  private _netAtGross(gross: number): number {
+    const originalGross = this._grossAnnual;
+    this._grossAnnual = gross;
+    try {
+      return this.net;
+    } finally {
+      this._grossAnnual = originalGross;
+    }
   }
 
   // ─── Annual allowance ────────────────────────────
