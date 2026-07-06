@@ -1,4 +1,4 @@
-label,taxYear,gross,pensionPercent,pensionBasis,qualifyingEarnings,expectedPension,expectedTaxableGross,personalAllowance,taxableIncome,basicRateTax,higherRateTax,additionalRateTax,expectedIncomeTax,niEarningsBase,niMainRate,niUpperRate,expectedNI,expectedTaxRelief,expectedNet,studentLoanPlans,expectedStudentLoan
+label,taxYear,gross,pensionPercent,pensionBasis,qualifyingEarnings,expectedPension,expectedTaxableGross,personalAllowance,taxableIncome,basicRateTax,higherRateTax,additionalRateTax,expectedIncomeTax,niEarningsBase,niMainRate,niUpperRate,expectedNI,expectedTaxRelief,expectedNet,studentLoanPlans,expectedStudentLoan,pensionFixed
 zero/0%,2024-25,0,0,employer,0,0,0,12570,0,0,0,0,0,0,0,0,0,0,0,,0
 zero/AutoEnrolment/5%,2024-25,0,5,auto_enrolment,0,0,0,12570,0,0,0,0,0,0,0,0,0,0,0,,0
 zero/Employer/5%,2024-25,0,5,employer,0,0,0,12570,0,0,0,0,0,0,0,0,0,0,0,,0
@@ -52,3 +52,5 @@ zero/Personal/5%,2024-25,0,5,personal,0,0,0,12570,0,0,0,0,0,0,0,0,0,0,0,,0
 £30k/baseline/0%,2026-27,30000,0,employer,0,0,30000,12570,17430,3486,0,0,3486,30000,1394.4,0,1394.4,0,25119.6,,0
 £50k/baseline/0%,2026-27,50000,0,employer,0,0,50000,12570,37430,7486,0,0,7486,50000,2994.4,0,2994.4,0,39519.6,,0
 £100k/Employer/5%,2026-27,100000,5,employer,0,5000,95000,12570,82430,7540,17892,0,25432,100000,3016,994.6,4010.6,0,65557.4,,0
+£135k/SalSac/£20k/Plan2,2025-26,135000,0,salary_sacrifice,0,20000,115000,5070,109930,7540,28892,0,36432,115000,3016,1294.6,4310.6,0,66469.7,plan_2,7787.7,20000
+£100k/SalSac/10%/Plan2,2025-26,100000,10,salary_sacrifice,0,10000,90000,12570,77430,7540,15892,0,23432,90000,3016,794.6,3810.6,0,57219.7,plan_2,5537.7,

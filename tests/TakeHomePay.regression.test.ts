@@ -6,6 +6,7 @@ import {TakeHomePay} from '../src/TakeHomePay';
 import {
   GrossAnnual,
   PensionPercent,
+  PensionFixed,
   PensionBasis,
   StudentLoanPlan,
 } from '../src/types';
@@ -63,9 +64,17 @@ describe('regression: annual calculations', () => {
     model.setPensionBasis(
       tc.pensionBasis as PensionBasis,
     );
-    model.setPension(
-      PensionPercent(Number(tc.pensionPercent)),
-    );
+    // A fixed sacrifice amount (e.g. exact £20,000)
+    // can't be expressed as a clean percentage, so an
+    // optional pensionFixed column overrides the percent.
+    const fixed = (tc.pensionFixed ?? '').trim();
+    if (fixed) {
+      model.setPension(PensionFixed(Number(fixed)));
+    } else {
+      model.setPension(
+        PensionPercent(Number(tc.pensionPercent)),
+      );
+    }
 
     const plansStr = (
       tc.studentLoanPlans ?? ''

@@ -338,17 +338,26 @@ export class TakeHomePay {
   }
 
   /**
+   * Contractual pay — gross reduced by any salary
+   * sacrifice. Salary sacrifice lowers the earnings on
+   * which both NI and student loan are assessed; every
+   * other pension basis leaves the full gross intact.
+   */
+  private get _contractualEarnings(): number {
+    return this._pensionBasis ===
+      PensionBasis.SalarySacrifice
+      ? this._grossAnnual - this.pensionDeduction
+      : this._grossAnnual;
+  }
+
+  /**
    * Total annual National Insurance contributions.
    * Salary sacrifice reduces contractual gross, so NI
    * is calculated on the lower amount.
    */
   get nationalInsurance(): number {
     const ni = this._config.nationalInsurance;
-    const earnings =
-      this._pensionBasis ===
-      PensionBasis.SalarySacrifice
-        ? this._grossAnnual - this.pensionDeduction
-        : this._grossAnnual;
+    const earnings = this._contractualEarnings;
 
     if (earnings <= ni.primaryThreshold) {
       return 0;
@@ -393,17 +402,17 @@ export class TakeHomePay {
    */
   get studentLoanDeduction(): number {
     let total = 0;
+    const earnings = this._contractualEarnings;
 
     for (const plan of this._studentLoanPlans) {
       const config =
         this._config.studentLoanThresholds[plan];
       if (
         config !== null &&
-        this._grossAnnual > config.annualThreshold
+        earnings > config.annualThreshold
       ) {
         total +=
-          (this._grossAnnual -
-            config.annualThreshold) *
+          (earnings - config.annualThreshold) *
           config.rate;
       }
     }
@@ -634,11 +643,7 @@ export class TakeHomePay {
   /** National Insurance breakdown. */
   get niBreakdown(): NIBreakdown {
     const ni = this._config.nationalInsurance;
-    const earnings =
-      this._pensionBasis ===
-      PensionBasis.SalarySacrifice
-        ? this._grossAnnual - this.pensionDeduction
-        : this._grossAnnual;
+    const earnings = this._contractualEarnings;
 
     const belowThreshold = Math.min(
       earnings, ni.primaryThreshold,
@@ -681,6 +686,7 @@ export class TakeHomePay {
   /** Student loan breakdown by plan. */
   get studentLoanBreakdown(): StudentLoanBreakdown[] {
     const breakdown: StudentLoanBreakdown[] = [];
+    const earnings = this._contractualEarnings;
 
     for (const plan of this._studentLoanPlans) {
       const config =
@@ -689,7 +695,7 @@ export class TakeHomePay {
 
       const amount = Math.max(
         0,
-        this._grossAnnual - config.annualThreshold,
+        earnings - config.annualThreshold,
       );
       const deduction =
         amount > 0
