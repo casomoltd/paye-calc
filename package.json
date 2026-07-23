@@ -76,6 +76,11 @@
   "//overrides": "esbuild + minimatch pinned to patched versions to clear dev-only advisories (esbuild dev-server file-read; minimatch ReDoS via eslint-plugin-sonarjs) that `npm audit fix` can't reach — transitive under vite/vitest and eslint-plugin-sonarjs. No production impact; drop when those deps ship the fixes.",
   "overrides": {
     "esbuild": ">=0.28.1",
-    "minimatch": ">=10.2.3"
+    "minimatch": ">=10.2.3",
+    "remark-lint-frontmatter-schema": {
+      "@apidevtools/json-schema-ref-parser": "^11.1.1",
+      "ajv": "^8.18.0",
+      "yaml": "^2.8.3"
+    }
   }
 }
