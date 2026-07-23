@@ -41,6 +41,24 @@ export enum StudentLoanPlan {
   Postgraduate = 'postgraduate',
 }
 
+/**
+ * Display names for the plans, beside the enum for the same
+ * reason NATIONS carries nation labels: consumers rendering a
+ * plan should never invent their own wording, and a plan added
+ * here fails the Record check in every consumer map. Plan 4 names
+ * Scotland because eligibility is Scotland-specific.
+ */
+export const STUDENT_LOAN_PLAN_LABELS: Record<
+  StudentLoanPlan,
+  string
+> = {
+  [StudentLoanPlan.Plan1]: 'Plan 1',
+  [StudentLoanPlan.Plan2]: 'Plan 2',
+  [StudentLoanPlan.Plan4]: 'Plan 4 (Scotland)',
+  [StudentLoanPlan.Plan5]: 'Plan 5',
+  [StudentLoanPlan.Postgraduate]: 'Postgraduate',
+};
+
 // ── Interfaces ─────────────────────────────────────
 
 /** A single tax band with its rate and boundaries */

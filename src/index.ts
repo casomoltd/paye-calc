@@ -26,6 +26,7 @@ export {
   PensionType,
   PensionBasis,
   StudentLoanPlan,
+  STUDENT_LOAN_PLAN_LABELS,
   DB_PENSION_INPUT_MULTIPLIER,
   TAX_YEARS,
   NATIONS,
