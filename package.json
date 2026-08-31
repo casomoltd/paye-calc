@@ -26,7 +26,7 @@
     "knip": "knip",
     "jscpd": "jscpd ./src",
     "lint:md": "remark --frail --quiet --no-stdout --rc-path node_modules/@casomoltd/tooling/bin/skills-lint.config.mjs docs CLAUDE.md",
-    "check": "npm run lint && npm run typecheck && npm run knip && npm run jscpd && npm run test && npm run lint:md",
+    "check": "npm run lint && npm run typecheck && npm run knip && npm run jscpd && npm run test && npm run lint:md && npm run build",
     "prepare": "husky"
   },
   "repository": {
