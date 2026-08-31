@@ -4,7 +4,8 @@ UK PAYE take-home pay calculator library.
 
 ## Commands
 
-- `npm run check` — lint + typecheck + test
+- `npm run check` — the repo's full health gate; `check-gates`
+  asserts its composition, so see `package.json` for the steps
 - `npm run build` — compile to dist/
 - `npm test` — run vitest
 
