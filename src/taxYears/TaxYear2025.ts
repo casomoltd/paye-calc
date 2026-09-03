@@ -140,6 +140,10 @@ export const TaxYear2025Scotland: TaxYearConfigScotland =
     nationalInsurance: NATIONAL_INSURANCE,
     qualifyingEarnings: QUALIFYING_EARNINGS,
     studentLoanThresholds: STUDENT_LOANS,
-    standardWeeklyHours: STANDARD_WEEKLY_HOURS,
+    // 37 hours, not the rUK 37.5 — see the schedule on
+    // `standardWeeklyHours` in TaxYearConfig.ts. Recorded because
+    // hoursPerYear() drives hourly-rate conversion, and deriving a
+    // Scottish hourly rate at 37.5 reads ~1.4% low.
+    standardWeeklyHours: 37,
     annualAllowance: ANNUAL_ALLOWANCE,
     };

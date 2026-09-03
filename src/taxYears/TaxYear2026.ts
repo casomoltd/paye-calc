@@ -138,6 +138,7 @@ export const TaxYear2026Scotland: TaxYearConfigScotland =
     ],
     nationalInsurance: NATIONAL_INSURANCE,
     qualifyingEarnings: QUALIFYING_EARNINGS,
+    // 36 hours — see the schedule on `standardWeeklyHours`.
     standardWeeklyHours: 36,
     studentLoanThresholds: STUDENT_LOANS,
     annualAllowance: ANNUAL_ALLOWANCE,

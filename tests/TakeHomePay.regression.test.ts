@@ -1,4 +1,4 @@
-import {describe, it} from 'vitest';
+import {describe, it, expect} from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import {fileURLToPath} from 'url';
@@ -13,6 +13,8 @@ import {
 import type {TaxYear, TaxRegion} from '../src/types';
 import {getTaxYearConfig} from '../src/taxYears';
 import {
+  higherRateBand,
+  higherRateThreshold,
   hoursPerYear,
   calculateTaperedAnnualAllowance,
   calculateThresholdIncome,
@@ -351,6 +353,12 @@ const hourlyCases = parseCsv(
   ),
 );
 
+// The National Living Wage in `expectedHourlyGross` is the one
+// externally-knowable figure here, and it is cited per row: the rest
+// of the fixture is circular by construction (gross == rate x hours),
+// so only that column and `expectedWeeklyHours` can fail on their own.
+// Rates are the NLW for the year the row is LABELLED with — they were
+// a year stale until 2 Sep 2026, which nothing caught.
 describe('regression: hourly rate', () => {
   it.each(hourlyCases)(
     '$label',
@@ -504,4 +512,68 @@ describe('regression: HMRC NI crosscheck', () => {
       );
     }
   });
+});
+
+// ─── Higher-rate threshold, by region ────────────
+//
+// Expectations are the published thresholds, not a re-derivation:
+// Scotland's higher rate starts at £43,662 (gov.uk Scottish income
+// tax) and rUK's at £50,270 (gov.uk income tax rates). The band is
+// found by NAME because `incomeTaxBands[0]` is the basic rate in
+// rUK and the STARTER rate in Scotland — reading position returned
+// £16,537 for Scotland, the top of the starter band.
+
+describe('regression: higher-rate threshold', () => {
+  it.each([
+    ['rUK', '2026-27', 50270],
+    ['scotland', '2026-27', 43662],
+  ] as const)('%s %s starts at %i', (region, year, expected) => {
+    expect(
+      higherRateThreshold(
+        getTaxYearConfig(year as TaxYear, region as TaxRegion),
+      ),
+    ).toBe(expected);
+  });
+
+  // The throw has to be watched failing at least once, or it is a
+  // guard nobody has seen work. TaxBand.name is a plain string, so
+  // this fault is reachable by an ordinary typo.
+  it('throws when no band carries the higher-rate name', () => {
+    const cfg = getTaxYearConfig('2026-27', 'scotland');
+    const renamed = {
+      ...cfg,
+      incomeTaxBands: cfg.incomeTaxBands.map((b) =>
+        b.name === 'Higher Rate'
+          ? {...b, name: 'Upper Rate'}
+          : b),
+    } as typeof cfg;
+    expect(() => higherRateBand(renamed)).toThrow(
+      /no Higher Rate/,
+    );
+  });
+
+  // An INDEPENDENT route: walk the engine, not the band table. The
+  // threshold is the gross at which the marginal rate first exceeds
+  // the basic rate, which the table-reading implementation cannot
+  // produce. The earlier version of this test re-spelled the lookup
+  // and asserted t >= pa + higher.min — exactly what the function
+  // returns — so it passed with the threshold shifted £5,000.
+  it.each(['rUK', 'scotland'] as const)(
+    '%s threshold is where the marginal rate first rises',
+    (region) => {
+      const cfg = getTaxYearConfig('2026-27', region);
+      const t = higherRateThreshold(cfg);
+      const taxAt = (gross: number) => {
+        const thp = new TakeHomePay('2026-27', region);
+        thp.setSalary(GrossAnnual(gross));
+        return thp.incomeTax;
+      };
+      const basic = higherRateBand(cfg).rate;
+      // £100 just below the threshold is taxed under the basic rate;
+      // £100 just above it attracts the higher rate.
+      const below = taxAt(t) - taxAt(t - 100);
+      const above = taxAt(t + 100) - taxAt(t);
+      expect(above).toBeGreaterThan(below);
+      expect(above / 100).toBeCloseTo(basic, 3);
+    });
 });

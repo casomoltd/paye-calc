@@ -23,8 +23,11 @@ import {
   calculateTaperedAnnualAllowance,
   calculateThresholdIncome,
   calculateAdjustedIncome,
+  taxBandByName,
+  topMarginalBand,
 } from './TaxYearConfig.js';
 import {getTaxYearConfig} from './taxYears/index.js';
+
 import {TaxCode, TaxStrategy} from './TaxCode.js';
 
 /**
@@ -324,26 +327,21 @@ export class TakeHomePay {
   }
 
   private flatTaxRate(strategy: TaxStrategy): number {
-    const bands = this._config.incomeTaxBands;
+    // All three by NAME, and all three throwing. Band ORDER is not
+    // band identity: `bands[0]` is the basic rate in rUK but the
+    // 19% starter rate in Scotland, and the last band is Scotland's
+    // 48% top rate — so a positional fallback answers a tax-code
+    // question with whichever band happens to sit there.
+    const rateOf = (name: string) =>
+      taxBandByName(this._config, name).rate;
 
     if (strategy === TaxStrategy.BasicRate) {
-      const band = bands.find(
-        b => b.name === TAX_BAND_NAMES.basicRate,
-      );
-      return band?.rate ?? bands[0].rate;
+      return rateOf(TAX_BAND_NAMES.basicRate);
     }
-
     if (strategy === TaxStrategy.HigherRate) {
-      const band = bands.find(
-        b => b.name === TAX_BAND_NAMES.higherRate,
-      );
-      return (
-        band?.rate ?? bands[bands.length - 1].rate
-      );
+      return rateOf(TAX_BAND_NAMES.higherRate);
     }
-
-    // AdditionalRate → last band
-    return bands[bands.length - 1].rate;
+    return topMarginalBand(this._config).rate;
   }
 
   /**

@@ -12,6 +12,7 @@ export {
   calculateTaperedAnnualAllowance,
   calculateThresholdIncome,
   calculateAdjustedIncome,
+  higherRateBand,
   higherRateThreshold,
   hoursPerYear,
 } from './TaxYearConfig.js';

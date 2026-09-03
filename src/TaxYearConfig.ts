@@ -4,6 +4,7 @@ import type {
   StudentLoanPlan,
   StudentLoanThreshold,
 } from './types.js';
+import {TAX_BAND_NAMES} from './types.js';
 
 /**
  * Pension annual allowance limits and taper thresholds —
@@ -92,9 +93,16 @@ interface TaxYearConfigBase {
   displayName: string;
 
   /**
-   * Standard contracted weekly hours for the region.
-   * rUK: 37.5 (NHS AfC standard).
-   * Scotland: 36 from 2026-27 (MSG AfC framework).
+   * Standard contracted weekly hours for the region — the divisor
+   * {@link hoursPerYear} uses to turn an annual salary into an
+   * hourly rate.
+   *
+   * Not a statutory figure: there is no UK-wide contracted week.
+   * These are the public-sector full-time weeks the regions
+   * actually use (37.5 for rUK; Scotland reduced to 37 from
+   * 1 April 2024 and to 36 from 1 April 2026). A caller whose
+   * contract differs should convert with its own hours rather
+   * than read this.
    */
   standardWeeklyHours: number;
 
@@ -129,13 +137,77 @@ export function hoursPerYear(
   return config.standardWeeklyHours * 52;
 }
 
-/** Higher-rate income tax threshold for rUK.
- *  personalAllowance + basic rate band width. */
+/**
+ * The higher-rate band for a region.
+ *
+ * Band ORDER is not band IDENTITY: `incomeTaxBands[0]` is the basic
+ * rate in rUK but the STARTER rate in Scotland, and the last band is
+ * Scotland's 48% Top Rate — so the higher band is found by name.
+ * Every published region defines one, so its absence is a data fault
+ * and this throws rather than fall back to a band that merely
+ * exists.
+ *
+ * One producer, so a caller cannot disagree with another about which
+ * band is "the higher band" — the two matching rules that used to
+ * exist here could diverge on a rename and tax the same salary at
+ * two different rates.
+ */
+export function taxBandByName(
+  config: TaxYearConfig,
+  name: string,
+): TaxBand {
+  const band = config.incomeTaxBands.find(
+    (b) => b.name === name,
+  );
+  if (!band) {
+    throw new Error(
+      `taxBandByName: no ${name} for ${config.region}`,
+    );
+  }
+  return band;
+}
+
+export function higherRateBand(
+  config: TaxYearConfig,
+): TaxBand {
+  return taxBandByName(config, TAX_BAND_NAMES.higherRate);
+}
+
+/**
+ * The band a D1 / top-rate code is taxed at.
+ *
+ * Named differently by region and that is the whole reason this
+ * exists: rUK calls it the Additional Rate, Scotland the Top Rate.
+ * Reading the LAST band happens to be right for both today, which
+ * is why the positional version survived — but it answers "which
+ * band is last" when the question is "which band is the top
+ * marginal one", and those come apart the moment a region adds a
+ * band above it.
+ */
+export function topMarginalBand(
+  config: TaxYearConfig,
+): TaxBand {
+  const named = config.incomeTaxBands.find(
+    (b) => b.name === TAX_BAND_NAMES.additionalRate
+      || b.name === TAX_BAND_NAMES.topRate,
+  );
+  if (!named) {
+    throw new Error(
+      'topMarginalBand: no '
+      + `${TAX_BAND_NAMES.additionalRate} or `
+      + `${TAX_BAND_NAMES.topRate} for ${config.region}`,
+    );
+  }
+  return named;
+}
+
+/** Gross income at which the higher rate starts — the personal
+ *  allowance plus the band's own lower bound. */
 export function higherRateThreshold(
   config: TaxYearConfig,
 ): number {
   return config.personalAllowance
-    + config.incomeTaxBands[0].max;
+    + higherRateBand(config).min;
 }
 
 /**

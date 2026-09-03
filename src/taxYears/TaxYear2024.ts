@@ -138,6 +138,8 @@ export const TaxYear2024Scotland: TaxYearConfigScotland =
     nationalInsurance: NATIONAL_INSURANCE,
     qualifyingEarnings: QUALIFYING_EARNINGS,
     studentLoanThresholds: STUDENT_LOANS,
-    standardWeeklyHours: STANDARD_WEEKLY_HOURS,
+    // 37 hours, not the rUK 37.5 — see the schedule on
+    // `standardWeeklyHours` in TaxYearConfig.ts.
+    standardWeeklyHours: 37,
     annualAllowance: ANNUAL_ALLOWANCE,
     };

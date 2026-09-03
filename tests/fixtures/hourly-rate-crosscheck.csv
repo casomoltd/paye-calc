@@ -1,5 +1,5 @@
-label,taxYear,region,gross,expectedWeeklyHours,expectedHoursPerYear,expectedHourlyGross
-NLW 21+ rUK 2026-27,2026-27,rUK,23809.50,37.5,1950,12.21
-NLW 21+ Scotland 2026-27,2026-27,scotland,22857.12,36,1872,12.21
-NLW 21+ rUK 2025-26,2025-26,rUK,22308.00,37.5,1950,11.44
-Scotland pre-reduction 2025-26,2025-26,scotland,22308.00,37.5,1950,11.44
+label,taxYear,region,gross,expectedWeeklyHours,expectedHoursPerYear,expectedHourlyGross,source
+NLW 21+ rUK 2026-27,2026-27,rUK,24784.50,37.5,1950,12.71,GOV.UK national minimum wage rates
+NLW 21+ Scotland 2026-27,2026-27,scotland,23793.12,36,1872,12.71,GOV.UK national minimum wage rates
+NLW 21+ rUK 2025-26,2025-26,rUK,23809.50,37.5,1950,12.21,GOV.UK national minimum wage rates
+NLW 21+ Scotland 2025-26,2025-26,scotland,23492.04,37,1924,12.21,GOV.UK national minimum wage rates
