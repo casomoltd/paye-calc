@@ -152,6 +152,21 @@ export const TAX_YEARS = {
 } as const;
 
 /**
+ * The tax year currently in force.
+ *
+ * The year whose rates, thresholds and statutory minima apply to
+ * money paid TODAY. It is a UK-wide fact fixed by the calendar, and
+ * it is deliberately NOT the same question as "which pay scale is a
+ * person on": someone paid last year's salary this year still pays
+ * this year's tax. Those two coincide most of the time, which is why
+ * one value gets used for both and the error only surfaces when an
+ * employer's pay round runs late.
+ *
+ * Rolls on 6 April. Bump it with the new year's config.
+ */
+export const CURRENT_TAX_YEAR: TaxYear = TAX_YEARS.Y2026_27;
+
+/**
  * UK nations for the region picker.
  * England, Wales, and Northern Ireland share the same
  * income tax bands (rUK). Scotland has its own bands.

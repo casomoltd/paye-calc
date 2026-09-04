@@ -130,11 +130,30 @@ export type TaxYearConfig =
   | TaxYearConfigUk
   | TaxYearConfigScotland;
 
-/** Annual contracted hours: weekly hours x 52. */
+/**
+ * Annual contracted hours: weekly hours x the number of weeks in a
+ * year, 365/7 ≈ 52.143.
+ *
+ * NOT 52. A calendar year is 52 weeks and one day, and every publisher
+ * that prints an hourly rate beside an annual salary divides by the
+ * longer year — so 52 produces a rate no publisher gives, about 0.3%
+ * high, roughly 4p an hour at Band 1.
+ *
+ * 365/7 is the ordinary UK payroll convention for converting between
+ * annual and hourly pay, and it is what employers' own published rate
+ * tables divide by. Leap years are ignored, as those tables ignore
+ * them: the convention is 365/7, not 365.25/7.
+ *
+ * The evidence for it is a domain matter and lives with the domain —
+ * `tests/fixtures/hourly-rate-crosscheck.csv` pins this function
+ * against rates a publisher printed beside the annual salaries they
+ * came from, at three different weekly hours, which is what rules out
+ * a coincidence at any one of them.
+ */
 export function hoursPerYear(
   config: TaxYearConfig,
 ): number {
-  return config.standardWeeklyHours * 52;
+  return (config.standardWeeklyHours * 365) / 7;
 }
 
 /**

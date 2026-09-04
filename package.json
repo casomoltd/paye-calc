@@ -17,7 +17,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "//build": "Cleans first: tsc leaves the compiled output of a deleted source in dist, and `files: [\"dist\"]` then publishes it — a withdrawn circular's transcription shipped that way from nhs-pay. prepack binds the clean build to packing, so a hand-run `npm pack` cannot ship a stale dist either.",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
@@ -27,7 +28,8 @@
     "jscpd": "jscpd ./src",
     "lint:md": "remark --frail --quiet --no-stdout --rc-path node_modules/@casomoltd/tooling/bin/skills-lint.config.mjs docs CLAUDE.md",
     "check": "check-gates && npm run lint && npm run typecheck && npm run knip && npm run jscpd && npm run test && npm run lint:md && npm run build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepack": "npm run build"
   },
   "casomo": {
     "gates": {

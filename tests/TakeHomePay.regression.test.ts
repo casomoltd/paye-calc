@@ -353,12 +353,15 @@ const hourlyCases = parseCsv(
   ),
 );
 
-// The National Living Wage in `expectedHourlyGross` is the one
-// externally-knowable figure here, and it is cited per row: the rest
-// of the fixture is circular by construction (gross == rate x hours),
-// so only that column and `expectedWeeklyHours` can fail on their own.
-// Rates are the NLW for the year the row is LABELLED with — they were
-// a year stale until 2 Sep 2026, which nothing caught.
+// Both columns come from the publisher, which is what makes this an
+// oracle rather than a restatement. Each row takes an annual salary
+// and the hourly rate printed BESIDE it in the same document, so
+// `gross / hoursPerYear(cfg)` is checked against a number nobody here
+// computed. Deriving either column from the other would only confirm
+// this file's own arithmetic.
+//
+// Three different weekly hours across two publishers: a divisor that
+// happened to fit one of them would fail the others.
 describe('regression: hourly rate', () => {
   it.each(hourlyCases)(
     '$label',
@@ -375,11 +378,6 @@ describe('regression: hourly rate', () => {
           'weeklyHours',
           cfg.standardWeeklyHours,
           Number(tc.expectedWeeklyHours),
-        ],
-        [
-          'hoursPerYear',
-          hpy,
-          Number(tc.expectedHoursPerYear),
         ],
         [
           'hourlyGross',
