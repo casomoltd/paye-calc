@@ -1,3 +1,4 @@
+import {taxYear as year} from './types.js';
 import {
   TaxYear,
   TaxRegion,
@@ -73,7 +74,7 @@ export class TakeHomePay {
    * @param region - The tax region (defaults to rUK).
    */
   constructor(
-    taxYear: TaxYear = '2024-25',
+    taxYear: TaxYear = year('2024-25'),
     region: TaxRegion = 'rUK',
   ) {
     this._region = region;

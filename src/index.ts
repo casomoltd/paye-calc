@@ -31,6 +31,7 @@ export {
   DB_PENSION_INPUT_MULTIPLIER,
   TAX_YEARS,
   CURRENT_TAX_YEAR,
+  PREVIOUS_TAX_YEAR,
   NATIONS,
   NATION_KEYS,
   TAX_REGIONS,
@@ -42,8 +43,11 @@ export {
   PensionPercent,
   PensionFixed,
 } from './types.js';
+export {taxYear, payYear} from './types.js';
 export type {
   TaxYear,
+  PayYear,
+  YearLabel,
   Nation,
   TaxRegion,
   Salary,

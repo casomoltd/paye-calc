@@ -1,4 +1,6 @@
-import {TaxYear, TaxRegion, TAX_YEARS} from '../types.js';
+import {
+  TaxYear, TaxRegion, TAX_YEARS, YearLabel, taxYear,
+} from '../types.js';
 import type {TaxYearConfig} from '../TaxYearConfig.js';
 import {
   TaxYear2023,
@@ -17,8 +19,12 @@ import {
   TaxYear2026Scotland,
 } from './TaxYear2026.js';
 
+// Keyed by YearLabel, not TaxYear: a total Record over the plain
+// literal union is what makes adding a year a compile error here
+// rather than a lookup that silently returns undefined. The branded
+// TaxYear exists for signatures; it cannot key a table.
 const taxYearConfigs: Record<
-  TaxYear,
+  YearLabel,
   Record<TaxRegion, TaxYearConfig>
 > = {
   [TAX_YEARS.Y2023_24]: {
@@ -47,7 +53,12 @@ export function getTaxYearConfig(
   year: TaxYear,
   region: TaxRegion = 'rUK',
 ): TaxYearConfig {
-  return taxYearConfigs[year][region];
+  // The one place the brand comes off, and deliberately explicit: a
+  // TaxYear is a label plus a claim about WHICH year it is, and the
+  // table only knows labels. Narrowing here keeps that transition
+  // visible instead of letting every caller do it implicitly.
+  const key: YearLabel = year;
+  return taxYearConfigs[key][region];
 }
 
 /** List of available tax years for UI selection */
@@ -56,7 +67,7 @@ export const availableTaxYears: TaxYear[] = [
   TAX_YEARS.Y2024_25,
   TAX_YEARS.Y2025_26,
   TAX_YEARS.Y2026_27,
-];
+].map(taxYear);
 
 /** Tax years that are disabled (not yet announced) */
 export const disabledTaxYears: TaxYear[] = [];

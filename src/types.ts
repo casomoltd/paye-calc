@@ -112,9 +112,90 @@ export interface StudentLoanBreakdown {
 
 // ── Type aliases ───────────────────────────────────
 
-/** Supported tax years */
-export type TaxYear =
+/**
+ * A published year's LABEL — '2026-27' and the three before it.
+ *
+ * This is the type that KEYS things: every `Record<YearLabel, …>` and
+ * every lookup table in this package and its consumers. It is
+ * deliberately a plain string-literal union, because that is what makes
+ * a total `Record` demand every member, a `Partial<Record<…>>` reject a
+ * year nobody publishes, and a `switch` over years exhaustive. Those
+ * three guarantees are how a new tax year becomes a compile error
+ * rather than a silent fall-through.
+ *
+ * Do not brand this. {@link TaxYear} and {@link PayYear} below are the
+ * branded types, and they exist for SIGNATURES, not for keys.
+ */
+export type YearLabel =
   (typeof TAX_YEARS)[keyof typeof TAX_YEARS];
+
+declare const YEAR_BASIS: unique symbol;
+
+/**
+ * The year whose TAX rules apply — bands, thresholds, NI rates,
+ * pension tiers. A UK-wide fact fixed by the calendar.
+ *
+ * Distinct from {@link PayYear} because the two answer different
+ * questions and only usually agree. Someone paid last year's salary
+ * this year still pays this year's tax; when an employer's pay round
+ * runs late — Northern Ireland, right now — the two come apart, and
+ * one value used for both silently misprices the deductions.
+ *
+ * The brand is a phantom: at runtime this is just the label. A bare
+ * literal or a freshly-parsed label still assigns to it, so a parse
+ * boundary needs no ceremony. What it stops is a value that has
+ * already been established as one KIND of year being used as the
+ * other.
+ *
+ * To index a label-keyed table with one, narrow it first — `const key:
+ * YearLabel = year` — so the transition is visible at the boundary
+ * where it happens rather than inferred everywhere.
+ */
+export type TaxYear = YearLabel & {
+  readonly [YEAR_BASIS]?: 'tax';
+};
+
+/**
+ * Read a label as a TAX year — the only way to mint one.
+ *
+ * A REQUIRED brand, so a bare label does not silently become either
+ * basis. With an optional brand a label assigned to both, which left
+ * a two-step hole: `PayYear` → `YearLabel` → `TaxYear` compiled with
+ * no cast and no error, and that widening is the same idiom every
+ * lookup uses to narrow for indexing. The single-expression mistake
+ * was caught; the two-step one was not.
+ *
+ * A no-op at runtime. Its whole job is to make the moment a label
+ * acquires a meaning a thing you have to write down.
+ */
+export function taxYear(label: YearLabel): TaxYear {
+  return label as TaxYear;
+}
+
+/**
+ * The year whose PAY SCALE a salary was published on — the employer's
+ * pay round, not the calendar.
+ *
+ * Per-nation, and not necessarily the current tax year: a nation whose
+ * award is announced but not yet in payment is still being paid last
+ * year's scale. See {@link TaxYear} for why the two are separate types.
+ *
+ * This package publishes no pay scales — it names the type because it
+ * owns the year vocabulary and both halves must be declared together
+ * for either to mean anything. `@casomoltd/nhs-pay` is where pay years
+ * are actually resolved.
+ */
+export type PayYear = YearLabel & {
+  readonly [YEAR_BASIS]?: 'pay';
+};
+
+/**
+ * Read a label as a PAY year — the only way to mint one.
+ * See {@link taxYear} for why the brand is required.
+ */
+export function payYear(label: YearLabel): PayYear {
+  return label as PayYear;
+}
 
 /** UK nation for the region picker. */
 export type Nation = keyof typeof NATIONS;
@@ -164,30 +245,42 @@ export const TAX_YEARS = {
  *
  * Rolls on 6 April. Bump it with the new year's config.
  */
-export const CURRENT_TAX_YEAR: TaxYear = TAX_YEARS.Y2026_27;
+export const CURRENT_TAX_YEAR: TaxYear = taxYear(TAX_YEARS.Y2026_27);
 
 /**
- * UK nations for the region picker.
- * England, Wales, and Northern Ireland share the same
- * income tax bands (rUK). Scotland has its own bands.
+ * The tax year before {@link CURRENT_TAX_YEAR}.
+ *
+ * A year-on-year comparison needs both ends, and reaching for a pay
+ * year as the other end is the conflation this vocabulary exists to
+ * stop: "last year's contracted week" and "last year's pay round" are
+ * different questions and diverge the moment a nation's award runs
+ * late. Rolls with `CURRENT_TAX_YEAR`.
+ */
+export const PREVIOUS_TAX_YEAR: TaxYear = taxYear(TAX_YEARS.Y2025_26);
+
+/**
+ * The UK nations this library computes for, and the one correct
+ * spelling of each.
+ *
+ * England, Wales and Northern Ireland share the same income tax bands
+ * (rUK); Scotland sets its own. That difference is the reason the
+ * nation is a parameter at all, and {@link nationToTaxRegion} is what
+ * consumes it.
+ *
+ * `label` is the nation's OWN NAME, not display chrome: a caller
+ * printing "Northern Ireland" must not be free to render "N. Ireland"
+ * or "NI" and have two surfaces disagree about what the same value is
+ * called. That is the same reason {@link STUDENT_LOAN_PLAN_LABELS}
+ * sits beside its enum. It is the only presentational thing here and
+ * it is deliberate — this package holds no icons, colours or view
+ * props, and a doc comment naming a caller's screen is the sign one
+ * has crept back in.
  */
 export const NATIONS = {
-  england: {
-    label: 'England',
-    flag: '\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC65\uDB40\uDC6E\uDB40\uDC67\uDB40\uDC7F',
-  },
-  wales: {
-    label: 'Wales',
-    flag: '\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC77\uDB40\uDC6C\uDB40\uDC73\uDB40\uDC7F',
-  },
-  scotland: {
-    label: 'Scotland',
-    flag: '\uD83C\uDFF4\uDB40\uDC67\uDB40\uDC62\uDB40\uDC73\uDB40\uDC63\uDB40\uDC74\uDB40\uDC7F',
-  },
-  'northern-ireland': {
-    label: 'Northern Ireland',
-    flag: '\u2618\uFE0F',
-  },
+  england: {label: 'England'},
+  wales: {label: 'Wales'},
+  scotland: {label: 'Scotland'},
+  'northern-ireland': {label: 'Northern Ireland'},
 } as const;
 
 /** Nation key constants — use instead of literals. */

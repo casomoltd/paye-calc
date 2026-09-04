@@ -1,3 +1,4 @@
+import {taxYear} from '../src/types.js';
 import {describe, it, expect} from 'vitest';
 import {
   calculateTaperedAnnualAllowance,
@@ -15,7 +16,7 @@ import {getTaxYearConfig} from '../src/taxYears';
 // overridden to those historical limits — proving formula
 // fidelity to the oracle without shipping pre-2023 years.
 const historical: TaxYearConfig = {
-  ...getTaxYearConfig('2025-26'),
+  ...getTaxYearConfig(taxYear('2025-26')),
   annualAllowance: {
     standard: 40000,
     moneyPurchase: 10000,
@@ -77,7 +78,7 @@ describe('AA taper — HMRC PTM057200 oracle', () => {
 // (tax.service.gov.uk/paac) on 2026-06-22: £40,000
 // available, £20,000 chargeable. See docs/verification.md.
 describe('AA taper — current limits (2025-26)', () => {
-  const cfg = getTaxYearConfig('2025-26');
+  const cfg = getTaxYearConfig(taxYear('2025-26'));
 
   it('full allowance below adjusted-income limit', () => {
     expect(

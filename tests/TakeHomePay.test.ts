@@ -1,3 +1,4 @@
+import {taxYear} from '../src/types.js';
 import {describe, it, expect, beforeEach} from 'vitest';
 import {TakeHomePay} from '../src/TakeHomePay';
 import {TaxCode} from '../src/TaxCode';
@@ -14,7 +15,7 @@ describe('TakeHomePay', () => {
   let model: TakeHomePay;
 
   beforeEach(() => {
-    model = new TakeHomePay('2024-25');
+    model = new TakeHomePay(taxYear('2024-25'));
   });
 
   describe('zero income', () => {
@@ -565,7 +566,7 @@ describe('TakeHomePay', () => {
 
     beforeEach(() => {
       scottishModel = new TakeHomePay(
-        '2025-26', 'scotland',
+        taxYear('2025-26'), 'scotland',
       );
     });
 

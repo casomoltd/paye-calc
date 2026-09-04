@@ -1,3 +1,4 @@
+import {taxYear} from '../src/types.js';
 import {describe, it, expect} from 'vitest';
 import fs from 'fs';
 import path from 'path';
@@ -537,7 +538,7 @@ describe('regression: higher-rate threshold', () => {
   // guard nobody has seen work. TaxBand.name is a plain string, so
   // this fault is reachable by an ordinary typo.
   it('throws when no band carries the higher-rate name', () => {
-    const cfg = getTaxYearConfig('2026-27', 'scotland');
+    const cfg = getTaxYearConfig(taxYear('2026-27'), 'scotland');
     const renamed = {
       ...cfg,
       incomeTaxBands: cfg.incomeTaxBands.map((b) =>
@@ -559,10 +560,10 @@ describe('regression: higher-rate threshold', () => {
   it.each(['rUK', 'scotland'] as const)(
     '%s threshold is where the marginal rate first rises',
     (region) => {
-      const cfg = getTaxYearConfig('2026-27', region);
+      const cfg = getTaxYearConfig(taxYear('2026-27'), region);
       const t = higherRateThreshold(cfg);
       const taxAt = (gross: number) => {
-        const thp = new TakeHomePay('2026-27', region);
+        const thp = new TakeHomePay(taxYear('2026-27'), region);
         thp.setSalary(GrossAnnual(gross));
         return thp.incomeTax;
       };
