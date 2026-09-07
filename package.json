@@ -63,7 +63,7 @@
     "provenance": true
   },
   "devDependencies": {
-    "@casomoltd/tooling": "^0.23.4",
+    "@casomoltd/tooling": "^0.24.3",
     "@commitlint/cli": "^20.0.0",
     "@types/node": "^25.5.0",
     "eslint": "^9.0.0",
