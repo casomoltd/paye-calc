@@ -76,6 +76,14 @@ calc.gross;                // gross needed for £35k net
 | 2025-26 | Yes | Yes      |
 | 2026-27 | Yes | Yes      |
 
+## Documentation
+
+- [`docs/how-it-works.md`](docs/how-it-works.md) — the rules that govern
+  the library, starting with the pay year / tax year split and what a
+  consumer resolving pay scales owes.
+- [`docs/verification.md`](docs/verification.md) — how the figures are
+  checked against the published sources.
+
 ## Development
 
 ```bash

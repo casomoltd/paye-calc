@@ -10,6 +10,29 @@
  * Northern Ireland is the live case. Its latest published AfC scale is
  * 2025-26 while the tax year in force is 2026-27, so a value carrying
  * one meaning must not be usable as the other.
+ *
+ * WHY THE BRAND IS OPTIONAL ON THE TYPES AND REQUIRED AT THE MINT.
+ * A phantom brand that every label satisfies leaves one hole: the
+ * two-step widening `PayYear` -> `YearLabel` -> `TaxYear`, which
+ * compiles with no cast because narrowing to `YearLabel` is the same
+ * idiom every label-keyed lookup uses to index a table. Closing it
+ * completely means branding `YearLabel` itself and minting at roughly
+ * 250 sites, most of them table keys where the basis is not in
+ * question. That was built, measured and reverted: it caught no defect
+ * these assertions do not, and it put ceremony on every lookup in the
+ * two consuming packages.
+ *
+ * So the split is enforced HERE rather than by the type system alone,
+ * and this file is the record of that decision. If the hole is ever
+ * proposed again, the answer is in this paragraph and in the assertions
+ * below, not in a discussion.
+ *
+ * The consumers hold the other half, and `docs/how-it-works.md` says
+ * what they owe: a pay year and a tax year should AGREE unless a
+ * nation is knowingly behind, so whichever package owns scale data
+ * asserts that agreement by default and names its exceptions. A
+ * difference nobody declared is a stale transcription, not a devolved
+ * calendar.
  */
 
 import {describe, expect, it} from 'vitest';
