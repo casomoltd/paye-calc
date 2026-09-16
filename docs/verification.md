@@ -7,8 +7,12 @@ How `paye-calc` results are cross-checked against HMRC's own tools.
 The core take-home engine is regression-tested against HMRC figures in
 `tests/fixtures/` (e.g. `hmrc-ni-crosscheck.csv`). For manual spot-checks
 use HMRC's **PAYE tax calculator** or **Basic PAYE Tools** (HMRC's own
-payroll engine) — see the workspace TODO for the BPT cross-check fixture
-plan.
+payroll engine). A fixture cross-checking this engine against Basic PAYE
+Tools is not yet written.
+
+The rules being verified are stated in
+[`how-it-works.md`](how-it-works.md); this document is the evidence that
+the implementation matches them.
 
 ## Pension annual-allowance taper
 

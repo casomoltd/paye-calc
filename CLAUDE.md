@@ -9,6 +9,14 @@ UK PAYE take-home pay calculator library.
 - `npm run build` — compile to dist/
 - `npm test` — run vitest
 
+## Docs
+
+- [`docs/how-it-works.md`](docs/how-it-works.md) — the MODEL: the rules
+  that govern the library and the reasoning behind them. Partial today;
+  only the year basis is written up.
+- [`docs/verification.md`](docs/verification.md) — the EVIDENCE: how the
+  figures are checked against HMRC's own tools and published sources.
+
 ## Architecture
 
 - `src/TakeHomePay.ts` — main calculator class

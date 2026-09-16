@@ -9,6 +9,12 @@ list, or the evidence that the figures are right — see
 A rule earns a section here when getting it wrong changes a number, or
 when it is the survivor of an alternative that cost real work to reject.
 
+**Partial, and knowingly so.** Only the year basis is written up. The
+rest of the library's rules — the order deductions are applied in, what
+a salary sacrifice reduces, how the personal-allowance taper is applied,
+what is rounded and when — are stated only in code. They belong here and
+have not been written yet.
+
 ## The year basis
 
 A salary and its deductions answer to two different years, and here they
