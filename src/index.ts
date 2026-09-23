@@ -1,6 +1,7 @@
 export {TakeHomePay} from './TakeHomePay.js';
 export {grossFor} from './grossFor.js';
 export {fullNewStatePension, statePensionYearly} from './statePension.js';
+export {minimumPensionAge} from './minimumPensionAge.js';
 export {TaxCode, TaxStrategy, TAX_CODE_PREFIX} from './TaxCode.js';
 export type {
   TaxYearConfig,

@@ -74,6 +74,10 @@ calc.gross;                // gross needed for £35k net
   `statePensionYearly(weekly)` for a forecast's weekly figure. The full
   rate only; what a person is due depends on their National Insurance
   record.
+- **Minimum pension age** — `minimumPensionAge(on)`: the normal minimum
+  pension age on a drawing date, 55 until 5 April 2028 and 57 from 6 April
+  2028, as the Finance Act 2004 sets it for any scheme outside the
+  uniformed services.
 - **Breakdowns** — `taxBreakdown`, `niBreakdown`, and
   `studentLoanBreakdown` for detailed output.
 
