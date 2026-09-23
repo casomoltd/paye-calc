@@ -64,6 +64,16 @@ calc.gross;                // gross needed for £35k net
 - **Tax codes** — standard, K codes, BR/D0/D1, NT, 0T, and
   Scottish prefixes.
 - **Net-to-gross** — binary search reverse calculation.
+- **Pension income** — `grossFor(targetNet, year, region)`: the
+  gross pension income that leaves a target after income tax alone,
+  with the Personal Allowance taper included. Not the take-home
+  inverse: a pension in payment carries no National Insurance,
+  student loan or contribution.
+- **State Pension** — `fullNewStatePension(year)`: the full rate of
+  the new State Pension for a tax year, weekly and yearly; and
+  `statePensionYearly(weekly)` for a forecast's weekly figure. The full
+  rate only; what a person is due depends on their National Insurance
+  record.
 - **Breakdowns** — `taxBreakdown`, `niBreakdown`, and
   `studentLoanBreakdown` for detailed output.
 

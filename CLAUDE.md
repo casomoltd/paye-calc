@@ -13,13 +13,17 @@ UK PAYE take-home pay calculator library.
 
 - [`docs/how-it-works.md`](docs/how-it-works.md) — the MODEL: the rules
   that govern the library and the reasoning behind them. Partial today;
-  only the year basis is written up.
+  the year basis and the pension-income inverse are written up.
 - [`docs/verification.md`](docs/verification.md) — the EVIDENCE: how the
   figures are checked against HMRC's own tools and published sources.
 
 ## Architecture
 
 - `src/TakeHomePay.ts` — main calculator class
+- `src/grossFor.ts` — gross pension income for a net target, income
+  tax alone
+- `src/statePension.ts` — the full new State Pension rate, per tax
+  year, each figure cited at its source
 - `src/TaxCode.ts` — HMRC tax code parser
 - `src/TaxYearConfig.ts` — tax year config types
 - `src/taxYears/` — per-year config data

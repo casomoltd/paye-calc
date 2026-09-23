@@ -9,11 +9,11 @@ list, or the evidence that the figures are right — see
 A rule earns a section here when getting it wrong changes a number, or
 when it is the survivor of an alternative that cost real work to reject.
 
-**Partial, and knowingly so.** Only the year basis is written up. The
-rest of the library's rules — the order deductions are applied in, what
-a salary sacrifice reduces, how the personal-allowance taper is applied,
-what is rounded and when — are stated only in code. They belong here and
-have not been written yet.
+**Partial, and knowingly so.** The year basis and the pension-income
+inverse are written up below. The rest of the library's rules — the
+order deductions are applied in, what a salary sacrifice reduces, how
+the personal-allowance taper is applied to an earner, what is rounded
+and when — are stated only in code, which is where to read them.
 
 ## The year basis
 
@@ -85,3 +85,26 @@ the tax year in force, with an explicit list of the nations known to
 lag, and asserts in turn that every nation on that list genuinely does
 lag. A nation that silently falls behind then fails a test instead of
 quietly joining the exception list.
+
+## Gross pension income for a net target
+
+`grossFor` answers a pensioner's question: what gross income leaves a
+given amount once income tax is taken? Income tax is the only
+deduction on a pension in payment, so it is not `TakeHomePay`'s
+`NetAnnual` inverse, which inverts an earner's whole take-home pay.
+
+**It is exact, and defined in pence.** The answer is the smallest
+gross, to the penny, whose net reaches the target. Income tax is
+linear in gross between the points where the marginal rate changes —
+the Personal Allowance, each band edge, and the two ends of the
+allowance taper — so the inverse is found on the piece that contains
+the target and then settled to the penny against this library's own
+tax figure, because the taper withdraws the allowance in whole pounds
+and tax is rounded to pence.
+
+**The taper is included.** Between its start and the income at which
+the allowance is gone, each extra pound of gross loses fifty pence of
+allowance, so the marginal rate is 60% at the higher rate rather than
+40%. A two-band inverse is exact below the taper and asks for too
+little gross above its start; the tests pin a figure worked by hand
+there.
