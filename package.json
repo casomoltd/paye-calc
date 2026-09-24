@@ -27,9 +27,11 @@
     "knip": "knip",
     "jscpd": "jscpd ./src",
     "lint:md": "remark --frail --quiet --no-stdout --rc-path node_modules/@casomoltd/tooling/bin/skills-lint.config.mjs docs CLAUDE.md",
-    "check": "check-gates && npm run lint && npm run typecheck && npm run knip && npm run jscpd && npm run test && npm run lint:md && npm run build",
+    "check": "check-gates && npm run check:private-refs && npm run check:personal-data && npm run lint && npm run typecheck && npm run knip && npm run jscpd && npm run test && npm run lint:md && npm run build",
     "prepare": "husky",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "check:personal-data": "check-personal-data",
+    "check:private-refs": "check-private-refs"
   },
   "casomo": {
     "gates": {
@@ -63,7 +65,7 @@
     "provenance": true
   },
   "devDependencies": {
-    "@casomoltd/tooling": "^0.28.0",
+    "@casomoltd/tooling": "^0.29.0",
     "@commitlint/cli": "^20.0.0",
     "@types/node": "^25.5.0",
     "eslint": "^9.0.0",
