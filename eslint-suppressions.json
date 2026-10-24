@@ -1,0 +1,60 @@
+{
+  "src/TakeHomePay.ts": {
+    "@typescript-eslint/no-magic-numbers": {
+      "count": 26
+    },
+    "max-lines": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "src/TaxCode.ts": {
+    "@typescript-eslint/no-magic-numbers": {
+      "count": 2
+    },
+    "@typescript-eslint/switch-exhaustiveness-check": {
+      "count": 1
+    },
+    "sonarjs/different-types-comparison": {
+      "count": 1
+    },
+    "sonarjs/prefer-regexp-exec": {
+      "count": 2
+    }
+  },
+  "src/TaxYearConfig.ts": {
+    "@typescript-eslint/no-magic-numbers": {
+      "count": 4
+    }
+  },
+  "src/grossFor.ts": {
+    "@typescript-eslint/no-magic-numbers": {
+      "count": 9
+    }
+  },
+  "src/minimumPensionAge.ts": {
+    "@typescript-eslint/no-magic-numbers": {
+      "count": 6
+    }
+  },
+  "tests/TakeHomePay.regression.test.ts": {
+    "max-lines": {
+      "count": 1
+    }
+  },
+  "tests/TakeHomePay.test.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 14
+    },
+    "max-lines": {
+      "count": 1
+    }
+  },
+  "tests/TaxCode.test.ts": {
+    "@typescript-eslint/no-non-null-assertion": {
+      "count": 34
+    }
+  }
+}
