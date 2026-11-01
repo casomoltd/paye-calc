@@ -97,6 +97,6 @@ describe('grossFor, against the two-band closed form', () => {
     // = 0.45 × gross − 14,550.45. Net is 0.55 × gross + 14,550.45,
     // which reaches £80,000 at £118,999.18 (tax rounds to £38,999.18);
     // at £118,999.17 tax still rounds to £38,999.18, leaving £79,999.99.
-    expect(grossFor(80_000, year, 'rUK')).toBe(118_999.18);
+    expect(grossFor(80_000, year, 'rUK')).toBeCloseTo(118_999.18, 9);
   });
 });

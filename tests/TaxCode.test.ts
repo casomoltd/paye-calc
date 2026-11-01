@@ -150,20 +150,12 @@ describe('TaxCode', () => {
   });
 
   describe('parse — emergency suffixes', () => {
-    it('1257L W1 → strips W1', () => {
-      const r = TaxCode.parse('1257L W1');
-      expect(r).not.toBeNull();
-      expect(r!.personalAllowance).toBe(12570);
-    });
-
-    it('1257L M1 → strips M1', () => {
-      const r = TaxCode.parse('1257L M1');
-      expect(r).not.toBeNull();
-      expect(r!.personalAllowance).toBe(12570);
-    });
-
-    it('1257LX → strips X', () => {
-      const r = TaxCode.parse('1257LX');
+    it.each([
+      {code: '1257L W1', suffix: 'W1'},
+      {code: '1257L M1', suffix: 'M1'},
+      {code: '1257LX', suffix: 'X'},
+    ])('$code → strips $suffix', ({code}) => {
+      const r = TaxCode.parse(code);
       expect(r).not.toBeNull();
       expect(r!.personalAllowance).toBe(12570);
     });

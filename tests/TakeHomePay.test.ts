@@ -48,14 +48,14 @@ describe('TakeHomePay', () => {
     it('calculates correctly for £30k', () => {
       model.setSalary(GrossAnnual(30000));
       expect(model.incomeTax).toBe(3486);
-      expect(model.nationalInsurance).toBe(1394.4);
-      expect(model.net).toBe(25119.6);
+      expect(model.nationalInsurance).toBeCloseTo(1394.4, 9);
+      expect(model.net).toBeCloseTo(25119.6, 9);
     });
 
     it('calculates correctly for £50k', () => {
       model.setSalary(GrossAnnual(50000));
       expect(model.incomeTax).toBe(7486);
-      expect(model.nationalInsurance).toBe(2994.4);
+      expect(model.nationalInsurance).toBeCloseTo(2994.4, 9);
     });
   });
 
@@ -63,7 +63,7 @@ describe('TakeHomePay', () => {
     it('calculates correctly for £60k', () => {
       model.setSalary(GrossAnnual(60000));
       expect(model.incomeTax).toBe(11432);
-      expect(model.nationalInsurance).toBe(3210.6);
+      expect(model.nationalInsurance).toBeCloseTo(3210.6, 9);
     });
 
     it('calculates correctly for £80k', () => {
@@ -189,7 +189,7 @@ describe('TakeHomePay', () => {
     it('NI on full gross (NET pay)', () => {
       model.setSalary(GrossAnnual(50000));
       model.setPension(PensionPercent(2));
-      expect(model.nationalInsurance).toBe(2994.4);
+      expect(model.nationalInsurance).toBeCloseTo(2994.4, 9);
     });
   });
 
@@ -200,34 +200,26 @@ describe('TakeHomePay', () => {
       );
     });
 
-    it('on qualifying earnings only', () => {
-      model.setSalary(GrossAnnual(30000));
+    it.each([
+      {name: 'on qualifying earnings only', salary: 30000, deduction: 1188},
+      {name: 'caps at upper threshold', salary: 60000, deduction: 2202},
+      {name: 'zero below lower threshold', salary: 5000, deduction: 0},
+    ])('$name', ({salary, deduction}) => {
+      model.setSalary(GrossAnnual(salary));
       model.setPension(PensionPercent(5));
-      expect(model.pensionDeduction).toBe(1188);
-    });
-
-    it('caps at upper threshold', () => {
-      model.setSalary(GrossAnnual(60000));
-      model.setPension(PensionPercent(5));
-      expect(model.pensionDeduction).toBe(2202);
-    });
-
-    it('zero below lower threshold', () => {
-      model.setSalary(GrossAnnual(5000));
-      model.setPension(PensionPercent(5));
-      expect(model.pensionDeduction).toBe(0);
+      expect(model.pensionDeduction).toBe(deduction);
     });
 
     it('NI on full gross', () => {
       model.setSalary(GrossAnnual(50000));
       model.setPension(PensionPercent(5));
-      expect(model.nationalInsurance).toBe(2994.4);
+      expect(model.nationalInsurance).toBeCloseTo(2994.4, 9);
     });
 
     it('reduces taxable income', () => {
       model.setSalary(GrossAnnual(30000));
       model.setPension(PensionPercent(5));
-      expect(model.incomeTax).toBe(3248.4);
+      expect(model.incomeTax).toBeCloseTo(3248.4, 9);
     });
   });
 
@@ -242,7 +234,7 @@ describe('TakeHomePay', () => {
       model.setSalary(GrossAnnual(50000));
       model.setPension(PensionPercent(5));
       expect(model.pensionDeduction).toBe(2500);
-      expect(model.nationalInsurance).toBe(2794.4);
+      expect(model.nationalInsurance).toBeCloseTo(2794.4, 9);
     });
 
     it('saves NI vs employer pension', () => {
@@ -297,7 +289,7 @@ describe('TakeHomePay', () => {
     it('NI on full gross', () => {
       model.setSalary(GrossAnnual(50000));
       model.setPension(PensionPercent(5));
-      expect(model.nationalInsurance).toBe(2994.4);
+      expect(model.nationalInsurance).toBeCloseTo(2994.4, 9);
     });
 
     it('zero relief for non-personal', () => {
@@ -437,7 +429,7 @@ describe('TakeHomePay', () => {
       expect(breakdown[0].rate).toBe(0);
       expect(breakdown[0].taxPaid).toBe(0);
       expect(breakdown[1].name).toBe('Basic Rate');
-      expect(breakdown[1].rate).toBe(0.2);
+      expect(breakdown[1].rate).toBeCloseTo(0.2, 9);
     });
 
     it('provides NI breakdown', () => {
@@ -486,22 +478,14 @@ describe('TakeHomePay', () => {
       expect(model.incomeTax).toBe(10000);
     });
 
-    it('D0: all income at 40%', () => {
+    it.each([
+      {name: 'D0: all income at 40%', code: 'D0', tax: 20000},
+      {name: 'D1: all income at 45%', code: 'D1', tax: 22500},
+      {name: 'NT: no tax', code: 'NT', tax: 0},
+    ])('$name', ({code, tax}) => {
       model.setSalary(GrossAnnual(50000));
-      model.setTaxCode(TaxCode.parse('D0')!);
-      expect(model.incomeTax).toBe(20000);
-    });
-
-    it('D1: all income at 45%', () => {
-      model.setSalary(GrossAnnual(50000));
-      model.setTaxCode(TaxCode.parse('D1')!);
-      expect(model.incomeTax).toBe(22500);
-    });
-
-    it('NT: no tax', () => {
-      model.setSalary(GrossAnnual(50000));
-      model.setTaxCode(TaxCode.parse('NT')!);
-      expect(model.incomeTax).toBe(0);
+      model.setTaxCode(TaxCode.parse(code)!);
+      expect(model.incomeTax).toBe(tax);
     });
 
     it('0T: no allowance, progressive', () => {
@@ -570,28 +554,14 @@ describe('TakeHomePay', () => {
       );
     });
 
-    it('BR uses Scottish basic rate (20%)', () => {
+    it.each([
+      {name: 'BR uses Scottish basic rate (20%)', code: 'BR', tax: 10000},
+      {name: 'D0 uses Scottish higher rate (42%)', code: 'D0', tax: 21000},
+      {name: 'D1 uses Scottish top rate (48%)', code: 'D1', tax: 24000},
+    ])('$name', ({code, tax}) => {
       scottishModel.setSalary(GrossAnnual(50000));
-      scottishModel.setTaxCode(
-        TaxCode.parse('BR')!,
-      );
-      expect(scottishModel.incomeTax).toBe(10000);
-    });
-
-    it('D0 uses Scottish higher rate (42%)', () => {
-      scottishModel.setSalary(GrossAnnual(50000));
-      scottishModel.setTaxCode(
-        TaxCode.parse('D0')!,
-      );
-      expect(scottishModel.incomeTax).toBe(21000);
-    });
-
-    it('D1 uses Scottish top rate (48%)', () => {
-      scottishModel.setSalary(GrossAnnual(50000));
-      scottishModel.setTaxCode(
-        TaxCode.parse('D1')!,
-      );
-      expect(scottishModel.incomeTax).toBe(24000);
+      scottishModel.setTaxCode(TaxCode.parse(code)!);
+      expect(scottishModel.incomeTax).toBe(tax);
     });
   });
 });

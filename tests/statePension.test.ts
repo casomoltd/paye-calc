@@ -12,7 +12,7 @@ import {
 describe('fullNewStatePension', () => {
   it('reads 2026-27 as £241.30 a week, 52 weeks a year', () => {
     const rate = fullNewStatePension(taxYear('2026-27'));
-    expect(rate.weekly).toBe(241.3);
+    expect(rate.weekly).toBeCloseTo(241.3, 9);
     expect(rate.yearly).toBeCloseTo(12547.6, 2);
   });
 

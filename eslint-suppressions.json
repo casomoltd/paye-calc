@@ -46,7 +46,7 @@
   },
   "tests/TakeHomePay.test.ts": {
     "@typescript-eslint/no-non-null-assertion": {
-      "count": 14
+      "count": 10
     },
     "max-lines": {
       "count": 1
@@ -54,7 +54,7 @@
   },
   "tests/TaxCode.test.ts": {
     "@typescript-eslint/no-non-null-assertion": {
-      "count": 34
+      "count": 32
     }
   }
 }
