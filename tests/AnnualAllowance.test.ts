@@ -4,7 +4,7 @@ import {
   calculateTaperedAnnualAllowance,
   calculateThresholdIncome,
   calculateAdjustedIncome,
-} from '../src/TaxYearConfig';
+} from '../src/annualAllowance';
 import type {TaxYearConfig} from '../src/TaxYearConfig';
 import {getTaxYearConfig} from '../src/taxYears';
 

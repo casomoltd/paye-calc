@@ -9,12 +9,10 @@ list, or the evidence that the figures are right — see
 A rule earns a section here when getting it wrong changes a number, or
 when it is the survivor of an alternative that cost real work to reject.
 
-**Partial, and knowingly so.** The year basis, PAYE free pay and the
-pension-income inverse are written up below. The rest of the library's
-rules — the order deductions are applied in, what a salary sacrifice
-reduces, how the personal-allowance taper is applied to an earner, what
-is rounded and when — are stated only in code, which is where to read
-them.
+**Partial, and knowingly so.** The rules not written up here — the order
+deductions are applied in, what a salary sacrifice reduces, how the
+personal-allowance taper is applied to an earner, what is rounded and
+when — are stated only in code, which is where to read them.
 
 ## The year basis
 
@@ -113,6 +111,37 @@ a tax breakdown, stay the statutory figure, as a payslip and HMRC's
 estimator show them; the bands are worked £9 further on. So the higher
 rate starts at £50,279 of pay in practice, though the published
 threshold is £50,270.
+
+## One calculation behind every figure
+
+Every take-home figure comes from one pure function, `payAt(gross,
+inputs)` in `src/pay.ts`; `TakeHomePay` only records inputs and reads
+that result. Income tax inside it comes from `incomeTaxRows` in
+`src/incomeTax.ts`, which `grossFor` reads too.
+
+**Why it matters for a net salary.** `NetAnnual(x)` is kept as the target
+it is, and the gross is solved when a figure is read, against everything
+set by then. A gross solved once and stored would go stale the moment a
+pension, code or year was set after it, with no error. The solved gross
+is the least that leaves at least the target, never a penny short.
+
+**Why the effective rate always agrees with net.** Net is gross less one
+total of what leaves pay, and `effectiveTaxRate` is that total over gross,
+so it is `1 − net / gross` on every pension basis. It counts the member's pension share with the tax, as the
+deductions a payslip shows do.
+
+## Relief at source is on the gross contribution
+
+A pension on the personal basis (relief at source) is stated as the gross
+contribution the pot receives, as auto-enrolment schemes quote it. The
+member pays it less the basic rate, which the provider claims from HMRC.
+The basic rate is the rest of the UK's for the year, even for a Scottish
+taxpayer. The pension input the annual-allowance tests see is the whole
+contribution.
+
+**Why gross.** A contribution quoted net and then grossed up would add
+the provider's relief to take-home pay, but the relief goes into the
+pot, not the member's pay.
 
 ## Gross pension income for a net target
 

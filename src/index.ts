@@ -1,4 +1,6 @@
 export {TakeHomePay} from './TakeHomePay.js';
+export {payAt, grossForNet} from './pay.js';
+export type {PayInputs, PayFigures} from './pay.js';
 export {grossFor} from './grossFor.js';
 export {fullNewStatePension, statePensionYearly} from './statePension.js';
 export {minimumPensionAge} from './minimumPensionAge.js';
@@ -9,16 +11,27 @@ export type {
   TaxYearConfigUk,
   TaxYearConfigScotland,
   AnnualAllowanceConfig,
-  AnnualAllowanceIncomeInputs,
 } from './TaxYearConfig.js';
 export {
   calculateTaperedPersonalAllowance,
-  calculateTaperedAnnualAllowance,
-  calculateThresholdIncome,
-  calculateAdjustedIncome,
+  personalAllowanceTaperEnd,
+  taxBandByName,
   higherRateBand,
   higherRateThreshold,
 } from './TaxYearConfig.js';
+export {
+  annualAllowance,
+  calculateTaperedAnnualAllowance,
+  calculateThresholdIncome,
+  calculateAdjustedIncome,
+} from './annualAllowance.js';
+export type {
+  AllowanceExtras,
+  AnnualAllowance,
+  AllowancePay,
+  AnnualAllowanceIncomeInputs,
+} from './annualAllowance.js';
+export type {ContributionSplit} from './pensionBases.js';
 export {
   getTaxYearConfig,
   availableTaxYears,
@@ -45,6 +58,7 @@ export {
   NetAnnual,
   PensionPercent,
   PensionFixed,
+  NO_PENSION,
 } from './types.js';
 export {taxYear, payYear} from './types.js';
 export type {
@@ -55,6 +69,7 @@ export type {
   TaxRegion,
   Salary,
   Pension,
+  PensionChoice,
   TaxBand,
   TaxBandBreakdown,
   NIThresholds,

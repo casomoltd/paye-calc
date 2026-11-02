@@ -138,7 +138,7 @@ declare const YEAR_BASIS: unique symbol;
  * Distinct from {@link PayYear} because the two answer different
  * questions and only usually agree. Someone paid last year's salary
  * this year still pays this year's tax; when an employer's pay round
- * runs late — Northern Ireland, right now — the two come apart, and
+ * runs late, the two come apart, and
  * one value used for both silently misprices the deductions.
  *
  * The brand is a phantom: at runtime this is just the label. A bare
@@ -158,12 +158,10 @@ export type TaxYear = YearLabel & {
 /**
  * Read a label as a TAX year — the only way to mint one.
  *
- * A REQUIRED brand, so a bare label does not silently become either
- * basis. With an optional brand a label assigned to both, which left
- * a two-step hole: `PayYear` → `YearLabel` → `TaxYear` compiled with
- * no cast and no error, and that widening is the same idiom every
- * lookup uses to narrow for indexing. The single-expression mistake
- * was caught; the two-step one was not.
+ * The minting is what makes a label one basis: a `PayYear` widened to
+ * a `YearLabel`, as every lookup does to index a table, becomes a
+ * `TaxYear` only through this call, never by assignment, so the step
+ * from one basis to the other is always written down.
  *
  * A no-op at runtime. Its whole job is to make the moment a label
  * acquires a meaning a thing you have to write down.
@@ -222,7 +220,23 @@ export type Pension =
   | {type: PensionType.Percent; percent: number}
   | {type: PensionType.Fixed; amount: number};
 
+/**
+ * A pension: the basis it is paid on and what is paid, one value, since
+ * a contribution means nothing until its basis says how it is taken and
+ * taxed. Relief at source is the gross pot contribution, as schemes
+ * quote it; the member pays it less basic-rate relief.
+ */
+export type PensionChoice =
+  | {readonly basis: PensionBasis.None}
+  | {
+    readonly basis: Exclude<PensionBasis, PensionBasis.None>;
+    readonly contribution: Pension;
+  };
+
 // ── Constants ──────────────────────────────────────
+
+/** No pension: what a calculation takes until one is set. */
+export const NO_PENSION: PensionChoice = {basis: PensionBasis.None};
 
 /** Tax year constants */
 export const TAX_YEARS = {
@@ -309,8 +323,12 @@ export const TAX_REGIONS = {
 
 /** Canonical band names used in tax year configs */
 export const TAX_BAND_NAMES = {
+  personalAllowance: 'Personal Allowance',
+  starterRate: 'Starter Rate',
   basicRate: 'Basic Rate',
+  intermediateRate: 'Intermediate Rate',
   higherRate: 'Higher Rate',
+  advancedRate: 'Advanced Rate',
   additionalRate: 'Additional Rate',
   topRate: 'Top Rate',
 } as const;

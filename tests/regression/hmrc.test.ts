@@ -11,7 +11,7 @@
 import {TaxCode} from '../../src/TaxCode';
 import {describe, it, expect} from 'vitest';
 import {TakeHomePay} from '../../src/TakeHomePay';
-import {GrossAnnual, PensionBasis, taxYear} from '../../src/types';
+import {GrossAnnual, taxYear} from '../../src/types';
 import type {YearLabel} from '../../src/types';
 import {ESTIMATOR_RUNS} from '../fixtures/hmrc/estimator';
 import {NI_CATEGORY_A} from '../fixtures/hmrc/ni';
@@ -113,7 +113,6 @@ describe('regression: HMRC NI test data', () => {
 describe('regression: HMRC take-home estimator', () => {
   it.each(ESTIMATOR_RUNS)('$case', ({given, printed}) => {
     const model = new TakeHomePay(taxYear(given.year), given.region);
-    model.setPensionBasis(PensionBasis.None);
     if ('code' in given) model.setTaxCode(TaxCode.from(given.code));
     model.setSalary(GrossAnnual(given.gross));
     const taxByRate = model.taxBreakdown

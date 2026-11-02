@@ -18,8 +18,8 @@ import {
   higherRateThreshold,
 } from '../../src/TaxYearConfig';
 import {getTaxYearConfig} from '../../src/taxYears';
-import {GrossAnnual, taxYear} from '../../src/types';
-import {runScenario} from '../scenario';
+import {GrossAnnual, PensionBasis, taxYear} from '../../src/types';
+import {BASIS_NAMES, runScenario} from '../scenario';
 import {REST_OF_UK} from '../fixtures/scenarios/rest-of-uk';
 import {SCOTLAND} from '../fixtures/scenarios/scotland';
 import {STUDENT_LOANS} from '../fixtures/scenarios/student-loans';
@@ -31,8 +31,9 @@ for (const [region, tables] of [
   ['rest of UK', REST_OF_UK],
   ['Scotland', SCOTLAND],
 ] as const) {
-  for (const [basis, table] of Object.entries(tables)) {
-    describe(`regression: ${region}, ${basis}`, () => {
+  for (const basis of Object.values(PensionBasis)) {
+    const table = tables[basis];
+    describe(`regression: ${region}, ${BASIS_NAMES[basis]}`, () => {
       it.each([...table])('$case', runScenario);
     });
   }

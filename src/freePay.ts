@@ -7,6 +7,7 @@
 
 import {allowanceLeft} from './TaxYearConfig.js';
 import type {TaxYearConfig} from './TaxYearConfig.js';
+import type {TaxCode} from './TaxCode.js';
 
 /** The pounds PAYE frees above an allowance (10N + 9). */
 const FREE_PAY_TOP_UP = 9;
@@ -28,11 +29,23 @@ export function freePayForCode(codeAllowance: number): number {
  * estimator run fits this and none fits rounding to a code first; no
  * published table states it.
  */
-export function freePayWithoutCode(
+function freePayWithoutCode(
   taxableGross: number,
   config: TaxYearConfig,
 ): number {
   return Math.max(0, allowanceLeft(taxableGross, config) + FREE_PAY_TOP_UP);
+}
+
+/**
+ * The pay PAYE leaves untaxed, on which tax is worked: the code's free
+ * pay, or with no code the tapered allowance plus £9.
+ */
+export function freePay(
+  taxableGross: number,
+  config: TaxYearConfig,
+  code: TaxCode | null,
+): number {
+  return code ? code.freePay : freePayWithoutCode(taxableGross, config);
 }
 
 /** Free pay for an allowance before any taper: what £12,570 frees. */

@@ -10,6 +10,15 @@ export function roundPence(pounds: number): number {
 }
 
 /**
+ * What a rate charges on an amount, to the penny. Every row of a
+ * breakdown, tax, NI or loan, is priced here, so a row and its total
+ * cannot round differently.
+ */
+export function charge(amount: number, rate: number): number {
+  return roundPence(amount * rate);
+}
+
+/**
  * The sum of amounts already in pence, rounded again so that float
  * addition cannot leave a stray fraction of a penny.
  */

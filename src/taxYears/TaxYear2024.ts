@@ -8,7 +8,6 @@ import {
 } from '../types.js';
 
 const YEAR = TAX_YEARS.Y2024_25;
-const DISPLAY_NAME = '2024-25';
 const PERSONAL_ALLOWANCE = 12570;
 const PERSONAL_ALLOWANCE_TAPER_START = 100000;
 
@@ -56,7 +55,6 @@ const ANNUAL_ALLOWANCE = {
 export const TaxYear2024: TaxYearConfigUk = {
   region: 'rUK',
   year: YEAR,
-  displayName: DISPLAY_NAME,
   personalAllowance: PERSONAL_ALLOWANCE,
   personalAllowanceTaperStart:
     PERSONAL_ALLOWANCE_TAPER_START,
@@ -91,7 +89,6 @@ export const TaxYear2024Scotland: TaxYearConfigScotland =
   {
     region: 'scotland',
     year: YEAR,
-    displayName: DISPLAY_NAME,
     personalAllowance: PERSONAL_ALLOWANCE,
     personalAllowanceTaperStart:
       PERSONAL_ALLOWANCE_TAPER_START,

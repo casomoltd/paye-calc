@@ -1,15 +1,21 @@
-// What the model reports beyond the totals: net to gross, per-period
-// figures, the effective tax rate and the band breakdowns.
+// What the model reports beyond the totals: net to gross, the effective
+// tax rate and the band breakdowns.
 
 import {describe, it, expect, beforeEach} from 'vitest';
 import {
   GrossAnnual,
   NetAnnual,
-  Period,
+  PensionBasis,
+  PensionPercent,
   taxYear,
   StudentLoanPlan,
 } from '../../src/types';
 import {TakeHomePay} from '../../src/TakeHomePay';
+import {TaxCode} from '../../src/TaxCode';
+
+const employer5 = {
+  basis: PensionBasis.Employer, contribution: PensionPercent(5),
+} as const;
 
 describe('TakeHomePay: outputs', () => {
   let model: TakeHomePay;
@@ -40,11 +46,10 @@ describe('TakeHomePay: outputs', () => {
       const expectedNet = model.net;
 
       model.setSalary(NetAnnual(expectedNet));
-      // A tax code moves in tens of pounds of allowance, which the taper
-      // takes £1 per £2 of pay, so free pay holds for £20 of gross and
-      // then drops £10: net is flat across up to £20 of gross, and the
-      // search returns the least gross in that stretch.
-      expect(Math.abs(model.gross - 110000)).toBeLessThan(20);
+      // The taper takes the allowance in whole pounds, £1 per £2 of pay,
+      // so net is flat across up to £2 of gross, and the search returns
+      // the least gross in that stretch.
+      expect(Math.abs(model.gross - 110000)).toBeLessThan(2);
     });
 
     it('returns 0 for negative net', () => {
@@ -53,40 +58,17 @@ describe('TakeHomePay: outputs', () => {
     });
   });
 
-  describe('period display values', () => {
-    it('shows annual values by default', () => {
-      model.setSalary(GrossAnnual(60000));
-      model.setPeriod(Period.Annual);
-      expect(model.displayGross).toBe(60000);
-      expect(model.displayNet).toBe(model.net);
+  describe('a net target holds whatever is set after it', () => {
+    it.each([
+      ['a pension', (m: TakeHomePay) => m.setPension(employer5)],
+      ['a tax code', (m: TakeHomePay) => m.setTaxCode(TaxCode.from('1100L'))],
+      ['another year', (m: TakeHomePay) => m.setTaxYear(taxYear('2026-27'))],
+    ])('%s', (_, change) => {
+      model.setSalary(NetAnnual(45000));
+      change(model);
+      expect(model.net).toBeGreaterThanOrEqual(45000);
+      expect(model.net - 45000).toBeLessThan(0.5);
     });
-
-    it('shows monthly values', () => {
-      model.setSalary(GrossAnnual(60000));
-      model.setPeriod(Period.Monthly);
-      expect(model.displayGross).toBe(5000);
-      expect(model.displayNet).toBeCloseTo(
-        model.net / 12, 2,
-      );
-    });
-
-    it('shows weekly values', () => {
-      model.setSalary(GrossAnnual(52000));
-      model.setPeriod(Period.Weekly);
-      expect(model.displayGross).toBe(1000);
-      expect(model.displayNet).toBeCloseTo(
-        model.net / 52, 2,
-      );
-      expect(model.displayIncomeTax).toBeCloseTo(
-        model.incomeTax / 52, 2,
-      );
-      expect(
-        model.displayNationalInsurance,
-      ).toBeCloseTo(
-        model.nationalInsurance / 52, 2,
-      );
-    });
-
   });
 
   describe('effective tax rate', () => {
@@ -101,6 +83,15 @@ describe('TakeHomePay: outputs', () => {
       model.setSalary(GrossAnnual(0));
       expect(model.effectiveTaxRate).toBe(0);
     });
+
+    it.each(Object.values(PensionBasis).filter((b) => b !== PensionBasis.None))(
+      'is everything that leaves pay on the %s basis', (basis) => {
+        model.setSalary(GrossAnnual(60000));
+        model.setPension({basis, contribution: PensionPercent(5)});
+        expect(model.effectiveTaxRate / 100)
+          .toBeCloseTo(1 - model.net / model.gross, 12);
+      },
+    );
   });
 
   describe('breakdowns', () => {

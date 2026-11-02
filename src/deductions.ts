@@ -12,6 +12,27 @@ import type {
   TaxBand,
 } from './types.js';
 
+/** Taxable income in one band. */
+interface BandAmount {
+  readonly band: TaxBand;
+  readonly amount: number;
+}
+
+/** Earnings below the primary threshold, at the main rate, and above the UEL. */
+interface NiAmounts {
+  readonly belowThreshold: number;
+  readonly mainRateAmount: number;
+  readonly upperRateAmount: number;
+}
+
+/** Earnings over one plan's repayment threshold. */
+interface LoanAmount {
+  readonly plan: StudentLoanPlan;
+  readonly threshold: number;
+  readonly rate: number;
+  readonly amount: number;
+}
+
 /** Taxable income in each band, in order, up to the last band it reaches. */
 export function amountsByBand(
   taxable: number,
@@ -28,7 +49,6 @@ export function amountsByBand(
   return amounts;
 }
 
-
 /** Earnings split at the primary threshold and the upper earnings limit. */
 export function niAmounts(earnings: number, ni: NIThresholds): NiAmounts {
   return {
@@ -39,7 +59,6 @@ export function niAmounts(earnings: number, ni: NIThresholds): NiAmounts {
     upperRateAmount: Math.max(0, earnings - ni.upperEarningsLimit),
   };
 }
-
 
 /** Earnings over each active plan's threshold, for the plans the year has. */
 export function loanAmounts(
@@ -57,27 +76,3 @@ export function loanAmounts(
     }];
   });
 }
-
-/** Taxable income in one band. */
-interface BandAmount {
-  readonly band: TaxBand;
-  readonly amount: number;
-}
-
-
-/** Earnings below the primary threshold, at the main rate, and above the UEL. */
-interface NiAmounts {
-  readonly belowThreshold: number;
-  readonly mainRateAmount: number;
-  readonly upperRateAmount: number;
-}
-
-
-/** Earnings over one plan's repayment threshold. */
-interface LoanAmount {
-  readonly plan: StudentLoanPlan;
-  readonly threshold: number;
-  readonly rate: number;
-  readonly amount: number;
-}
-

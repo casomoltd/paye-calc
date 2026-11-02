@@ -74,8 +74,8 @@ flexibly accessed, no prior-year carry-forward. PAAC returned:
 
 This matches the case "Adjusted income of £300,000 takes £20,000 off" in
 `tests/fixtures/annual-allowance-taper.ts` and the
-`availableAnnualAllowance` (£40,000) / `annualAllowanceExcess` (£20,000)
-getters exactly.
+`annualAllowance().available` (£40,000) and `.excess` (£20,000)
+exactly.
 
 #### Caveats when using PAAC
 

@@ -6,11 +6,11 @@
  * student loan — which is the right question for a salary and the wrong
  * one for a pension in payment, where income tax is the only deduction.
  */
-import {GrossAnnual} from './types.js';
 import type {TaxRegion, TaxYear} from './types.js';
-import {TakeHomePay} from './TakeHomePay.js';
 import {getTaxYearConfig} from './taxYears/index.js';
 import {calculateTaperedPersonalAllowance} from './TaxYearConfig.js';
+import type {TaxYearConfig} from './TaxYearConfig.js';
+import {incomeTaxRows, taxOf} from './incomeTax.js';
 import {freePayOfAllowance} from './freePay.js';
 import {PENCE_PER_POUND, roundPence} from './money.js';
 
@@ -24,14 +24,8 @@ const WIDEN_BY = 2;
 /** Income tax on a gross income with nothing else deducted, as this
  *  library charges it: PAYE free pay with no code given, the region's
  *  bands, rounded to the penny. */
-function incomeTaxOn(
-  gross: number,
-  year: TaxYear,
-  region: TaxRegion,
-): number {
-  const calc = new TakeHomePay(year, region);
-  calc.setSalary(GrossAnnual(gross));
-  return calc.incomeTax;
+function incomeTaxOn(gross: number, config: TaxYearConfig): number {
+  return taxOf(incomeTaxRows(gross, config, null));
 }
 
 /**
@@ -41,8 +35,7 @@ function incomeTaxOn(
  * straight line on each piece. Free pay is the allowance plus £9, and
  * the taper runs until that is gone.
  */
-function breakpoints(year: TaxYear, region: TaxRegion): number[] {
-  const config = getTaxYearConfig(year, region);
+function breakpoints(config: TaxYearConfig): number[] {
   const allowance = config.personalAllowance;
   const taperFrom = config.personalAllowanceTaperStart;
   // The allowance lost per pound of income inside the taper, read off
@@ -100,10 +93,10 @@ export function grossFor(
   if (targetNet === 0) return 0;
   // In pence, as money is: a float a hair either side of a penny must
   // not decide which penny is the answer.
-  const net = (gross: number) =>
-    roundPence(gross - incomeTaxOn(gross, year, region));
+  const config = getTaxYearConfig(year, region);
+  const net = (gross: number) => roundPence(gross - incomeTaxOn(gross, config));
 
-  const points = breakpoints(year, region);
+  const points = breakpoints(config);
   let high = points[points.length - 1];
   while (net(high) < targetNet) high *= WIDEN_BY;
   points.push(high);

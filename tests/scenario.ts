@@ -13,8 +13,20 @@ import type {StudentLoanPlan, TaxRegion, YearLabel} from '../src/types';
 
 /** A pension contribution: a percentage of pay, or a fixed amount. */
 type PensionGiven =
-  | {readonly basis: PensionBasis; readonly percent: number}
-  | {readonly basis: PensionBasis; readonly fixed: number};
+  | {readonly basis: PaidBasis; readonly percent: number}
+  | {readonly basis: PaidBasis; readonly fixed: number};
+
+/** A basis a contribution is paid on: every basis but none. */
+type PaidBasis = Exclude<PensionBasis, PensionBasis.None>;
+
+/** Each basis as a test title names it. */
+export const BASIS_NAMES: Readonly<Record<PensionBasis, string>> = {
+  [PensionBasis.None]: 'no pension',
+  [PensionBasis.AutoEnrolment]: 'auto-enrolment',
+  [PensionBasis.Employer]: 'employer pension',
+  [PensionBasis.SalarySacrifice]: 'salary sacrifice',
+  [PensionBasis.Personal]: 'personal pension',
+};
 
 /** A pension of `percent` of pay on each basis, or a fixed amount. */
 export const employer = (percent: number): PensionGiven =>
@@ -68,10 +80,12 @@ export interface Scenario {
 function modelFor(given: Given): TakeHomePay {
   const model = new TakeHomePay(taxYear(given.year), given.region);
   if (given.pension) {
-    model.setPensionBasis(given.pension.basis);
-    model.setPension('fixed' in given.pension
-      ? PensionFixed(given.pension.fixed)
-      : PensionPercent(given.pension.percent));
+    model.setPension({
+      basis: given.pension.basis,
+      contribution: 'fixed' in given.pension
+        ? PensionFixed(given.pension.fixed)
+        : PensionPercent(given.pension.percent),
+    });
   }
   if (given.loans) model.setStudentLoanPlans(new Set(given.loans));
   model.setSalary(GrossAnnual(given.gross));

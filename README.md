@@ -21,13 +21,14 @@ import {
   PensionPercent,
   PensionBasis,
   StudentLoanPlan,
-  Period,
 } from '@casomoltd/paye-calc';
 
 const calc = new TakeHomePay('2025-26', 'rUK');
 calc.setSalary(GrossAnnual(55000));
-calc.setPension(PensionPercent(5));
-calc.setPensionBasis(PensionBasis.AutoEnrolment);
+calc.setPension({
+  basis: PensionBasis.AutoEnrolment,
+  contribution: PensionPercent(5),
+});
 calc.setStudentLoanPlans(
   new Set([StudentLoanPlan.Plan2]),
 );
@@ -39,16 +40,16 @@ calc.pensionDeduction;     // annual pension contribution
 calc.studentLoanDeduction; // annual student loan repayment
 calc.effectiveTaxRate;     // total deductions as % of gross
 calc.marginalTaxRate;      // tax rate on next £1
-
-// Period-adjusted values
-calc.setPeriod(Period.Monthly);
-calc.displayNet;           // monthly take-home
-calc.displayIncomeTax;     // monthly income tax
+calc.annualAllowance();    // the pension annual allowance and any excess
 
 // Reverse calculation — find gross from target net
 calc.setSalary(NetAnnual(35000));
 calc.gross;                // gross needed for £35k net
 ```
+
+`payAt(gross, inputs)` gives the same figures as a pure function, for a
+caller that needs one figure without a calculator
+([how it works](docs/how-it-works.md#one-calculation-behind-every-figure)).
 
 ## Features
 
@@ -64,7 +65,9 @@ calc.gross;                // gross needed for £35k net
 - **Tax codes** — standard, K codes, BR, NT, 0T, the D codes as
   HMRC's PAYE Manual (PAYE11025) defines them (D0 and D1; SD0 to SD3
   in Scotland), and the Scottish and Welsh prefixes.
-- **Net-to-gross** — binary search reverse calculation.
+- **Net-to-gross** — binary search reverse calculation, re-solved
+  whenever another input changes
+  ([why](docs/how-it-works.md#one-calculation-behind-every-figure)).
 - **Pension income** — `grossFor(targetNet, year, region)`: the
   gross pension income that leaves a target after income tax alone,
   with the Personal Allowance taper included. Not the take-home

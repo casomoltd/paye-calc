@@ -4,6 +4,11 @@
 import {describe, it, expect, beforeEach} from 'vitest';
 import {GrossAnnual, taxYear} from '../../src/types';
 import {TakeHomePay} from '../../src/TakeHomePay';
+import {
+  calculateTaperedPersonalAllowance,
+  personalAllowanceTaperEnd,
+} from '../../src/TaxYearConfig';
+import {availableTaxYears, getTaxYearConfig} from '../../src/taxYears';
 
 describe('TakeHomePay: income tax', () => {
   let model: TakeHomePay;
@@ -107,5 +112,32 @@ describe('TakeHomePay: income tax', () => {
       // 20% of 37,700 + 40% of 87,440 + 45% of the 24,860 above 125,140.
       expect(model.incomeTax).toBe(53703);
     });
+  });
+});
+
+describe('personalAllowanceTaperEnd', () => {
+  // gov.uk gives the higher rate as "£37,701 to £125,140" of taxable
+  // income and the additional rate "over £125,140", where the
+  // allowance has tapered to nil:
+  // https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past
+  it('is where the taper has taken the whole allowance: £125,140', () => {
+    const config = getTaxYearConfig(taxYear('2024-25'), 'rUK');
+    const end = personalAllowanceTaperEnd(config);
+    expect(end).toBe(125_140);
+    expect(calculateTaperedPersonalAllowance(end, config)).toBe(0);
+    expect(calculateTaperedPersonalAllowance(end - 2, config)).toBe(1);
+  });
+});
+
+describe('the top band starts where the taper ends', () => {
+  // The year files state the additional (Scotland: top) rate's edge as
+  // data; this holds it to the edge the taper derives, in every year.
+  it.each(availableTaxYears.flatMap(
+    (year) => (['rUK', 'scotland'] as const)
+      .map((region) => [year, region] as const),
+  ))('%s %s', (year, region) => {
+    const config = getTaxYearConfig(year, region);
+    expect(config.incomeTaxBands.at(-1)?.min)
+      .toBe(personalAllowanceTaperEnd(config));
   });
 });
