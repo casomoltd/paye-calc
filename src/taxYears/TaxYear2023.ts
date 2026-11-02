@@ -11,7 +11,6 @@ const YEAR = TAX_YEARS.Y2023_24;
 const DISPLAY_NAME = '2023-24';
 const PERSONAL_ALLOWANCE = 12570;
 const PERSONAL_ALLOWANCE_TAPER_START = 100000;
-const STANDARD_WEEKLY_HOURS = 37.5;
 
 const NATIONAL_INSURANCE = {
   primaryThreshold: 12570,
@@ -72,19 +71,18 @@ export const TaxYear2023: TaxYearConfigUk = {
       name: 'Higher Rate',
       rate: 0.4,
       min: 37700,
-      max: 112570,
+      max: 125140,
     },
     {
       name: 'Additional Rate',
       rate: 0.45,
-      min: 112570,
+      min: 125140,
       max: Infinity,
     },
   ],
   nationalInsurance: NATIONAL_INSURANCE,
   qualifyingEarnings: QUALIFYING_EARNINGS,
   studentLoanThresholds: STUDENT_LOANS,
-  standardWeeklyHours: STANDARD_WEEKLY_HOURS,
   annualAllowance: ANNUAL_ALLOWANCE,
 };
 
@@ -120,18 +118,17 @@ export const TaxYear2023Scotland: TaxYearConfigScotland =
         name: 'Higher Rate',
         rate: 0.42,
         min: 31092,
-        max: 112570,
+        max: 125140,
       },
       {
         name: 'Top Rate',
         rate: 0.47,
-        min: 112570,
+        min: 125140,
         max: Infinity,
       },
     ],
     nationalInsurance: NATIONAL_INSURANCE,
     qualifyingEarnings: QUALIFYING_EARNINGS,
     studentLoanThresholds: STUDENT_LOANS,
-    standardWeeklyHours: STANDARD_WEEKLY_HOURS,
     annualAllowance: ANNUAL_ALLOWANCE,
     };

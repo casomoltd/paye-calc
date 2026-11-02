@@ -51,7 +51,7 @@ const taxYearConfigs: Record<
  */
 export function getTaxYearConfig(
   year: TaxYear,
-  region: TaxRegion = 'rUK',
+  region: TaxRegion,
 ): TaxYearConfig {
   // The one place the brand comes off, and deliberately explicit: a
   // TaxYear is a label plus a claim about WHICH year it is, and the

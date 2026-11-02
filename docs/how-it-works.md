@@ -9,11 +9,12 @@ list, or the evidence that the figures are right — see
 A rule earns a section here when getting it wrong changes a number, or
 when it is the survivor of an alternative that cost real work to reject.
 
-**Partial, and knowingly so.** The year basis and the pension-income
-inverse are written up below. The rest of the library's rules — the
-order deductions are applied in, what a salary sacrifice reduces, how
-the personal-allowance taper is applied to an earner, what is rounded
-and when — are stated only in code, which is where to read them.
+**Partial, and knowingly so.** The year basis, PAYE free pay and the
+pension-income inverse are written up below. The rest of the library's
+rules — the order deductions are applied in, what a salary sacrifice
+reduces, how the personal-allowance taper is applied to an earner, what
+is rounded and when — are stated only in code, which is where to read
+them.
 
 ## The year basis
 
@@ -85,6 +86,33 @@ the tax year in force, with an explicit list of the nations known to
 lag, and asserts in turn that every nation on that list genuinely does
 lag. A nation that silently falls behind then fails a test instead of
 quietly joining the exception list.
+
+## Tax is worked on PAYE free pay
+
+Income tax is worked as PAYE deducts it, on pay above the tax code's free
+pay, not on pay above the allowance. The code is in `src/freePay.ts`;
+the evidence is in [`verification.md`](verification.md).
+
+**What frees what.** An L code N frees ten times N plus £9: 1257L frees
+£12,579, against an allowance of £12,570. A K code N adds exactly ten
+times N to pay. 0T frees nothing, and BR, the D codes and NT charge one
+flat rate, or none, on everything. With no code given, free pay is the
+allowance the taper leaves, before it is held at nil, plus £9, and never
+below nothing: an allowance tapered to exactly nil still frees £9, one
+tapered a pound past it frees £8, and further past it nothing.
+
+**Why PAYE's figure and not the year's liability.** A take-home figure is
+what a payslip shows, and a payslip is worked from the code's free pay.
+The year's legal liability, which Self Assessment would charge, uses the
+£12,570 itself, and so runs £9 at the taxpayer's top rate higher: £1.71
+to £4.32 a year. HMRC's own
+take-home estimator works from free pay, and so does this library.
+
+**What it moves.** The allowance a caller reads, and the allowance row of
+a tax breakdown, stay the statutory figure, as a payslip and HMRC's
+estimator show them; the bands are worked £9 further on. So the higher
+rate starts at £50,279 of pay in practice, though the published
+threshold is £50,270.
 
 ## Gross pension income for a net target
 

@@ -11,9 +11,18 @@ import type {TaxRegion, TaxYear} from './types.js';
 import {TakeHomePay} from './TakeHomePay.js';
 import {getTaxYearConfig} from './taxYears/index.js';
 import {calculateTaperedPersonalAllowance} from './TaxYearConfig.js';
+import {freePayOfAllowance} from './freePay.js';
+import {PENCE_PER_POUND, roundPence} from './money.js';
+
+/** A step two pounds past the taper's start: the taper takes whole pounds,
+ *  £1 for each £2, so this is the shortest step that shows its rate. */
+const TAPER_PROBE = 2;
+
+/** How fast the search's upper bound grows until it covers the target. */
+const WIDEN_BY = 2;
 
 /** Income tax on a gross income with nothing else deducted, as this
- *  library charges it: the tapered personal allowance, the region's
+ *  library charges it: PAYE free pay with no code given, the region's
  *  bands, rounded to the penny. */
 function incomeTaxOn(
   gross: number,
@@ -26,10 +35,11 @@ function incomeTaxOn(
 }
 
 /**
- * The gross incomes at which the marginal rate changes: the personal
- * allowance, each band edge, and the two ends of the allowance taper.
- * Between two of them income tax is linear in gross, which is what
- * makes the inverse a straight line on each piece.
+ * The gross incomes at which the marginal rate changes: free pay, each
+ * band edge, and the two ends of the allowance taper. Between two of
+ * them income tax is linear in gross, which is what makes the inverse a
+ * straight line on each piece. Free pay is the allowance plus £9, and
+ * the taper runs until that is gone.
  */
 function breakpoints(year: TaxYear, region: TaxRegion): number[] {
   const config = getTaxYearConfig(year, region);
@@ -38,19 +48,21 @@ function breakpoints(year: TaxYear, region: TaxRegion): number[] {
   // The allowance lost per pound of income inside the taper, read off
   // the library's own taper rather than restated here.
   const perPound = (allowance
-    - calculateTaperedPersonalAllowance(taperFrom + 2, config)) / 2;
-  const taperTo = taperFrom + allowance / perPound;
+    - calculateTaperedPersonalAllowance(taperFrom + TAPER_PROBE, config))
+    / TAPER_PROBE;
+  const free = freePayOfAllowance(allowance);
+  const taperTo = taperFrom + free / perPound;
   const edges = config.incomeTaxBands
     .flatMap((b) => [b.min, b.max])
     .filter(Number.isFinite);
-  const points = [0, allowance, taperFrom, taperTo];
+  const points = [0, free, taperFrom, taperTo];
   for (const edge of edges) {
-    // Where taxable income reaches `edge`: gross less the allowance
-    // below the taper, less a shrinking allowance inside it, and gross
-    // itself once the allowance is gone.
-    points.push(edge + allowance);
+    // Where taxable income reaches `edge`: gross less free pay below the
+    // taper, less a shrinking free pay inside it, and gross itself once
+    // free pay is gone.
+    points.push(edge + free);
     points.push(
-      (edge + allowance + perPound * taperFrom) / (1 + perPound),
+      (edge + free + perPound * taperFrom) / (1 + perPound),
     );
     points.push(edge);
   }
@@ -89,11 +101,11 @@ export function grossFor(
   // In pence, as money is: a float a hair either side of a penny must
   // not decide which penny is the answer.
   const net = (gross: number) =>
-    Math.round((gross - incomeTaxOn(gross, year, region)) * 100) / 100;
+    roundPence(gross - incomeTaxOn(gross, year, region));
 
   const points = breakpoints(year, region);
   let high = points[points.length - 1];
-  while (net(high) < targetNet) high *= 2;
+  while (net(high) < targetNet) high *= WIDEN_BY;
   points.push(high);
 
   const upper = points.findIndex((p) => net(p) >= targetNet);
@@ -104,8 +116,9 @@ export function grossFor(
     : lower + (targetNet - net(lower)) * (top - lower)
       / (net(top) - net(lower));
 
-  let pence = Math.ceil(guess * 100);
-  while (net(pence / 100) < targetNet) pence += 1;
-  while (pence > 0 && net((pence - 1) / 100) >= targetNet) pence -= 1;
-  return pence / 100;
+  const pounds = (p: number) => p / PENCE_PER_POUND;
+  let pence = Math.ceil(guess * PENCE_PER_POUND);
+  while (net(pounds(pence)) < targetNet) pence += 1;
+  while (pence > 0 && net(pounds(pence - 1)) >= targetNet) pence -= 1;
+  return pounds(pence);
 }

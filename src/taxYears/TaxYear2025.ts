@@ -11,7 +11,6 @@ const YEAR = TAX_YEARS.Y2025_26;
 const DISPLAY_NAME = '2025-26';
 const PERSONAL_ALLOWANCE = 12570;
 const PERSONAL_ALLOWANCE_TAPER_START = 100000;
-const STANDARD_WEEKLY_HOURS = 37.5;
 
 const NATIONAL_INSURANCE = {
   primaryThreshold: 12570,
@@ -74,19 +73,18 @@ export const TaxYear2025: TaxYearConfigUk = {
       name: 'Higher Rate',
       rate: 0.4,
       min: 37700,
-      max: 112570,
+      max: 125140,
     },
     {
       name: 'Additional Rate',
       rate: 0.45,
-      min: 112570,
+      min: 125140,
       max: Infinity,
     },
   ],
   nationalInsurance: NATIONAL_INSURANCE,
   qualifyingEarnings: QUALIFYING_EARNINGS,
   studentLoanThresholds: STUDENT_LOANS,
-  standardWeeklyHours: STANDARD_WEEKLY_HOURS,
   annualAllowance: ANNUAL_ALLOWANCE,
 };
 
@@ -128,22 +126,17 @@ export const TaxYear2025Scotland: TaxYearConfigScotland =
         name: 'Advanced Rate',
         rate: 0.45,
         min: 62430,
-        max: 112570,
+        max: 125140,
       },
       {
         name: 'Top Rate',
         rate: 0.48,
-        min: 112570,
+        min: 125140,
         max: Infinity,
       },
     ],
     nationalInsurance: NATIONAL_INSURANCE,
     qualifyingEarnings: QUALIFYING_EARNINGS,
     studentLoanThresholds: STUDENT_LOANS,
-    // 37 hours, not the rUK 37.5 — see the schedule on
-    // `standardWeeklyHours` in TaxYearConfig.ts. Recorded because
-    // hoursPerYear() drives hourly-rate conversion, and deriving a
-    // Scottish hourly rate at 37.5 reads ~1.4% low.
-    standardWeeklyHours: 37,
     annualAllowance: ANNUAL_ALLOWANCE,
     };

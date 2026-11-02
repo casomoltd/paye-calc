@@ -136,7 +136,7 @@ describe('the pay year / tax year split', () => {
   });
 
   it('resolves a config from CURRENT_TAX_YEAR', () => {
-    expect(getTaxYearConfig(CURRENT_TAX_YEAR).year)
+    expect(getTaxYearConfig(CURRENT_TAX_YEAR, 'rUK').year)
       .toBe(CURRENT_TAX_YEAR);
   });
 });

@@ -61,8 +61,9 @@ calc.gross;                // gross needed for £35k net
   source, and NHS tiered contributions.
 - **Student loans** — Plans 1, 2, 4, 5 and Postgraduate,
   with multiple concurrent plans.
-- **Tax codes** — standard, K codes, BR/D0/D1, NT, 0T, and
-  Scottish prefixes.
+- **Tax codes** — standard, K codes, BR, NT, 0T, the D codes as
+  HMRC's PAYE Manual (PAYE11025) defines them (D0 and D1; SD0 to SD3
+  in Scotland), and the Scottish and Welsh prefixes.
 - **Net-to-gross** — binary search reverse calculation.
 - **Pension income** — `grossFor(targetNet, year, region)`: the
   gross pension income that leaves a target after income tax alone,

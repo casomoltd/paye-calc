@@ -73,19 +73,18 @@ export const TaxYear2026: TaxYearConfigUk = {
       name: 'Higher Rate',
       rate: 0.4,
       min: 37700,
-      max: 112570,
+      max: 125140,
     },
     {
       name: 'Additional Rate',
       rate: 0.45,
-      min: 112570,
+      min: 125140,
       max: Infinity,
     },
   ],
   nationalInsurance: NATIONAL_INSURANCE,
   qualifyingEarnings: QUALIFYING_EARNINGS,
   studentLoanThresholds: STUDENT_LOANS,
-  standardWeeklyHours: 37.5,
   annualAllowance: ANNUAL_ALLOWANCE,
 };
 
@@ -127,19 +126,17 @@ export const TaxYear2026Scotland: TaxYearConfigScotland =
         name: 'Advanced Rate',
         rate: 0.45,
         min: 62430,
-        max: 112570,
+        max: 125140,
       },
       {
         name: 'Top Rate',
         rate: 0.48,
-        min: 112570,
+        min: 125140,
         max: Infinity,
       },
     ],
     nationalInsurance: NATIONAL_INSURANCE,
     qualifyingEarnings: QUALIFYING_EARNINGS,
-    // 36 hours — see the schedule on `standardWeeklyHours`.
-    standardWeeklyHours: 36,
     studentLoanThresholds: STUDENT_LOANS,
     annualAllowance: ANNUAL_ALLOWANCE,
     };

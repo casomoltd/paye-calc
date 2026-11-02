@@ -12,8 +12,7 @@ UK PAYE take-home pay calculator library.
 ## Docs
 
 - [`docs/how-it-works.md`](docs/how-it-works.md) — the MODEL: the rules
-  that govern the library and the reasoning behind them. Partial today;
-  the year basis and the pension-income inverse are written up.
+  that govern the library and the reasoning behind them.
 - [`docs/verification.md`](docs/verification.md) — the EVIDENCE: how the
   figures are checked against HMRC's own tools and published sources.
 
@@ -27,10 +26,21 @@ UK PAYE take-home pay calculator library.
 - `src/minimumPensionAge.ts` — the normal minimum pension age on a
   date, cited to the Finance Act
 - `src/TaxCode.ts` — HMRC tax code parser
-- `src/TaxYearConfig.ts` — tax year config types
+- `src/TaxYearConfig.ts` — tax year config types, the band lookups,
+  the allowance tapers and the annual-allowance arithmetic
+- `src/money.ts` — pence rounding and percentages
+- `src/deductions.ts` — the pay each deduction falls on: by band, by NI
+  rate, by loan plan
+- `src/flatRate.ts` — the one band a BR or D code charges at
+- `src/freePay.ts` — PAYE free pay, on which income tax is worked
+- `src/pensionBases.ts` — what each pension basis does to pay
+- `src/pensionInputs.ts` — the annual-allowance view of a year's pension
+  saving
 - `src/taxYears/` — per-year config data
 - `src/types.ts` — shared types and constants
-- `tests/fixtures/` — regression test CSV fixtures
+- `tests/fixtures/` — regression tables, typed TS: `hmrc/` (HMRC's
+  transcribed test data), `scenarios/` (the model's own take-home
+  figures), and small published tables beside them
 
 ## Conventions
 

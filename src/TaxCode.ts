@@ -9,6 +9,7 @@
  */
 
 import {NATION_KEYS} from './types.js';
+import {freePayForCode} from './freePay.js';
 import type {Nation} from './types.js';
 
 /** How income tax should be calculated for this code. */
@@ -17,10 +18,11 @@ export enum TaxStrategy {
   Progressive = 'progressive',
   /** BR — all income taxed at basic rate (20%). */
   BasicRate = 'basic_rate',
-  /** D0 — all income taxed at higher rate (40%). */
-  HigherRate = 'higher_rate',
-  /** D1 — all income taxed at additional rate (45%). */
-  AdditionalRate = 'additional_rate',
+  /**
+   * D codes — all income at one rate above the basic rate; which
+   * one is the code's `rule.band`.
+   */
+  FlatRate = 'flat_rate',
   /** NT — no tax charged on any income. */
   NoTax = 'no_tax',
 }
@@ -38,28 +40,78 @@ type TaxCodePrefix =
   | null;
 
 /**
- * Special codes that map directly to a fixed strategy
- * with zero personal allowance.
+ * How a code's tax is worked out. A D code carries the band it taxes
+ * at, so a flat rate with no band, or a band on a progressive code,
+ * cannot be built.
  */
-const SPECIAL_CODES: Record<string, TaxStrategy> = {
+export type TaxRule =
+  | {readonly strategy: Exclude<TaxStrategy, TaxStrategy.FlatRate>}
+  | {readonly strategy: TaxStrategy.FlatRate; readonly band: number};
+
+/**
+ * Special codes that map directly to a fixed strategy with zero
+ * personal allowance. Partial because most strings are not one, which
+ * the lookup has to be able to say.
+ */
+const SPECIAL_CODES: Partial<Record<
+  string, Exclude<TaxStrategy, TaxStrategy.FlatRate>
+>> = {
   BR: TaxStrategy.BasicRate,
-  D0: TaxStrategy.HigherRate,
-  D1: TaxStrategy.AdditionalRate,
   NT: TaxStrategy.NoTax,
   '0T': TaxStrategy.Progressive,
 };
 
 /** Region prefix characters. */
-const PREFIXES = new Set(['S', 'C']);
+const PREFIXES: ReadonlySet<string> = new Set(Object.values(TAX_CODE_PREFIX));
 
 /** Emergency suffix pattern (W1, M1, X at end). */
 const EMERGENCY_SUFFIX = / ?(?:W1|M1|X)$/;
+
+/** D code pattern — one flat rate above the basic rate. */
+const D_CODE = /^D(\d)$/;
+
+/**
+ * The highest D code each prefix has (HMRC PAYE Manual PAYE11025):
+ * rUK and Wales D0 to D1 (higher, additional), Scotland SD0 to SD3
+ * (intermediate, higher, advanced, top). This is the most recent year's
+ * ceiling; a year with fewer rates (Scotland had no advanced rate in
+ * 2023-24) refuses the extra code when its tax is worked out.
+ */
+const LAST_D_CODE = {
+  [TAX_CODE_PREFIX.Scotland]: 3,
+  [TAX_CODE_PREFIX.Wales]: 1,
+  none: 1,
+} as const;
+
+/** A code's number is its allowance in tens of pounds: 1257L is £12,570. */
+const POUNDS_PER_CODE_UNIT = 10;
 
 /** K code pattern — negative allowance. */
 const K_CODE = /^K(\d+)$/;
 
 /** Standard numeric code with optional suffix. */
 const NUMERIC_CODE = /^(\d+)[LMNT]?$/;
+
+/** What a parsed code holds. */
+interface TaxCodeFields {
+  code: string;
+  personalAllowance: number;
+  rule: TaxRule;
+  prefix: TaxCodePrefix;
+}
+
+/** The allowance a code's number stands for. */
+function allowanceOf(digits: string): number {
+  return Number(digits) * POUNDS_PER_CODE_UNIT;
+}
+
+/** Split a normalised code into its region prefix and the rest. */
+function splitPrefix(raw: string): [TaxCodePrefix, string] {
+  const first = raw[0];
+  return PREFIXES.has(first)
+    ? [first as TaxCodePrefix, raw.slice(1)]
+    : [null, raw];
+}
 
 /**
  * Parsed HMRC tax code.
@@ -77,22 +129,32 @@ export class TaxCode {
    */
   readonly personalAllowance: number;
 
-  /** How income tax should be calculated. */
-  readonly strategy: TaxStrategy;
+  /**
+   * How income tax should be calculated. For a D code, `band` is its
+   * number: Dn taxes all income at the nth rate above the basic rate in
+   * the taxpayer's nation, so SD0 is Scotland's 21% intermediate rate
+   * where D0 is the 40% higher rate.
+   */
+  readonly rule: TaxRule;
 
   /** Region prefix (S = Scotland, C = Wales). */
   readonly prefix: TaxCodePrefix;
 
-  private constructor(
-    code: string,
-    personalAllowance: number,
-    strategy: TaxStrategy,
-    prefix: TaxCodePrefix,
-  ) {
-    this.code = code;
-    this.personalAllowance = personalAllowance;
-    this.strategy = strategy;
-    this.prefix = prefix;
+  private constructor(fields: TaxCodeFields) {
+    this.code = fields.code;
+    this.personalAllowance = fields.personalAllowance;
+    this.rule = fields.rule;
+    this.prefix = fields.prefix;
+  }
+
+  /** The pay PAYE leaves untaxed under this code (see `freePay.ts`). */
+  get freePay(): number {
+    return freePayForCode(this.personalAllowance);
+  }
+
+  /** The rule's strategy, for a caller that only needs to branch on it. */
+  get strategy(): TaxStrategy {
+    return this.rule.strategy;
   }
 
   /**
@@ -110,7 +172,7 @@ export class TaxCode {
         return NATION_KEYS.scotland;
       case TAX_CODE_PREFIX.Wales:
         return NATION_KEYS.wales;
-      default:
+      case null:
         return null;
     }
   }
@@ -128,46 +190,48 @@ export class TaxCode {
     const raw = input.trim().toUpperCase();
     if (raw.length === 0) return null;
 
-    // Extract region prefix (S = Scotland, C = Wales)
-    let prefix: TaxCodePrefix = null;
-    let body = raw;
-    const first = body[0];
-    if (PREFIXES.has(first)) {
-      prefix = first as TaxCodePrefix;
-      body = body.slice(1);
-    }
-
+    const [prefix, coded] = splitPrefix(raw);
     // Strip emergency suffixes (W1, M1, X)
-    body = body.replace(EMERGENCY_SUFFIX, '');
+    const body = coded.replace(EMERGENCY_SUFFIX, '');
+    const make = (personalAllowance: number, rule: TaxRule) =>
+      new TaxCode({code: raw, personalAllowance, rule, prefix});
+    const progressive = {strategy: TaxStrategy.Progressive} as const;
 
     // Special flat-rate / no-allowance codes
     const specialStrategy = SPECIAL_CODES[body];
     if (specialStrategy !== undefined) {
-      return new TaxCode(
-        raw, 0, specialStrategy, prefix,
-      );
+      return make(0, {strategy: specialStrategy});
     }
 
-    // K codes — negative allowance
-    const kMatch = body.match(K_CODE);
-    if (kMatch) {
-      const pa = -parseInt(kMatch[1], 10) * 10;
-      return new TaxCode(
-        raw, pa, TaxStrategy.Progressive, prefix,
-      );
+    // D codes — one flat rate above the basic rate, as far as the
+    // prefix's nation has rates
+    const dMatch = D_CODE.exec(body);
+    if (dMatch) {
+      const band = Number(dMatch[1]);
+      return band > LAST_D_CODE[prefix ?? 'none']
+        ? null
+        : make(0, {strategy: TaxStrategy.FlatRate, band});
     }
 
-    // Standard numeric codes: digits + optional suffix
-    const numMatch = body.match(NUMERIC_CODE);
-    if (numMatch) {
-      const pa = parseInt(numMatch[1], 10) * 10;
-      return new TaxCode(
-        raw, pa, TaxStrategy.Progressive, prefix,
-      );
-    }
+    // K codes — negative allowance; standard codes — digits plus an
+    // optional suffix
+    const kMatch = K_CODE.exec(body);
+    if (kMatch) return make(-allowanceOf(kMatch[1]), progressive);
+    const numMatch = NUMERIC_CODE.exec(body);
+    if (numMatch) return make(allowanceOf(numMatch[1]), progressive);
 
     // Unrecognised format
     return null;
+  }
+
+  /**
+   * Parse a code the caller holds to be valid, failing loud if it is not:
+   * the throwing twin of `parse`, for input that is not the user's.
+   */
+  static from(input: string): TaxCode {
+    const parsed = TaxCode.parse(input);
+    if (!parsed) throw new Error(`Not an HMRC tax code: ${input}`);
+    return parsed;
   }
 
   /**

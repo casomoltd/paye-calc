@@ -1,44 +1,63 @@
-import {taxYear as year} from './types.js';
 import {
+  taxYear,
   TaxYear,
   TaxRegion,
-  TAX_REGIONS,
   Period,
   Salary,
   SalaryType,
   TaxBandBreakdown,
   NIBreakdown,
-  TAX_BAND_NAMES,
   Pension,
   PensionType,
   PensionPercent,
   PensionBasis,
   StudentLoanPlan,
   StudentLoanBreakdown,
-  DB_PENSION_INPUT_MULTIPLIER,
+  TAX_BAND_NAMES,
+  TAX_REGIONS,
 } from './types.js';
+import {asPercent, percentOf, roundPence, sumPence} from './money.js';
+import {amountsByBand, loanAmounts, niAmounts} from './deductions.js';
+import {allowanceIncomes, pensionInput} from './pensionInputs.js';
+import {PENSION_BASES} from './pensionBases.js';
+import type {BasisRules} from './pensionBases.js';
+import type {PensionSaving} from './pensionInputs.js';
 import {
   TaxYearConfig,
-  AnnualAllowanceIncomeInputs,
   calculateTaperedPersonalAllowance,
   calculateTaperedAnnualAllowance,
   calculateThresholdIncome,
   calculateAdjustedIncome,
   taxBandByName,
-  topMarginalBand,
 } from './TaxYearConfig.js';
 import {getTaxYearConfig} from './taxYears/index.js';
 
-import {TaxCode, TaxStrategy} from './TaxCode.js';
+import {
+  TaxCode, TaxStrategy,
+} from './TaxCode.js';
+import {freePayWithoutCode} from './freePay.js';
+import {flatRateBand} from './flatRate.js';
 
 /**
- * Relief-at-source (personal) pension contributions are
- * topped up by HMRC at the 20% basic rate, regardless of
- * the saver's nation or marginal band. This factor grosses
- * a net contribution up to include that relief:
- * 0.20 / (1 - 0.20).
+ * Net to gross is searched for, not solved, because the allowance taper
+ * makes take-home pay non-linear in gross. Gross is never below the net
+ * it leaves, and is under three times it while total deductions stay
+ * under two thirds of gross, as tax, NI and an ordinary pension do; a
+ * target beyond that bound throws rather than return a wrong gross.
+ * Inside it the search halves the range until the net is within a penny.
+ * Where the taper takes a whole pound, net jumps by up to 40p and some
+ * targets are never hit exactly; the answer is then the least gross
+ * found that leaves at least the target.
  */
-const BASIC_RATE_RELIEF_GROSS_UP = 0.25;
+const NET_TO_GROSS = {highestMultiple: 3, steps: 100, tolerance: 0.01};
+const HALVES = 2;
+
+/** How many of each display period make a year. */
+const PERIODS_PER_YEAR: Record<Period, number> = {
+  [Period.Weekly]: 52,
+  [Period.Monthly]: 12,
+  [Period.Annual]: 1,
+};
 
 /**
  * TakeHomePay model - calculates UK PAYE take-home pay.
@@ -47,6 +66,9 @@ const BASIC_RATE_RELIEF_GROSS_UP = 0.25;
  * - Income tax with Personal Allowance taper
  * - National Insurance contributions
  * - Pension deductions (auto-enrolment, employer, salary sacrifice, personal)
+ * - Student loan repayments, several plans at once
+ * - HMRC tax codes (standard, K, BR, D, NT, 0T, and the S and C prefixes)
+ * - The pension annual allowance and its taper
  * - Gross-to-net and net-to-gross calculations
  */
 export class TakeHomePay {
@@ -70,13 +92,11 @@ export class TakeHomePay {
 
   /**
    * Creates a new TakeHomePay calculator.
-   * @param taxYear - The tax year to use.
-   * @param region - The tax region (defaults to rUK).
+   * @param taxYear - The tax year to use. Required: a year picks every
+   *   rate the calculation reads, so none is assumed.
+   * @param region - The tax region. Required for the same reason.
    */
-  constructor(
-    taxYear: TaxYear = year('2024-25'),
-    region: TaxRegion = 'rUK',
-  ) {
+  constructor(taxYear: TaxYear, region: TaxRegion) {
     this._region = region;
     this._config = getTaxYearConfig(taxYear, region);
   }
@@ -100,28 +120,26 @@ export class TakeHomePay {
       return;
     }
 
-    let low = salary.annual;
-    let high = salary.annual * 3;
-    const tolerance = 0.01;
-
-    for (let i = 0; i < 100; i++) {
-      const mid = (low + high) / 2;
-      this._grossAnnual = mid;
-      const calculatedNet = this.net;
-
-      if (
-        Math.abs(calculatedNet - salary.annual) <
-        tolerance
-      ) {
-        return;
-      }
-
-      if (calculatedNet < salary.annual) {
-        low = mid;
-      } else {
-        high = mid;
-      }
+    const target = salary.annual;
+    let low = target;
+    let high = target * NET_TO_GROSS.highestMultiple;
+    if (this._netAtGross(high) < target) {
+      throw new Error(
+        `No gross up to £${high} leaves £${target} net: deductions take`
+        + ' more than two thirds of pay',
+      );
     }
+    for (let i = 0; i < NET_TO_GROSS.steps; i++) {
+      const mid = (low + high) / HALVES;
+      const net = this._netAtGross(mid);
+      if (Math.abs(net - target) < NET_TO_GROSS.tolerance) {
+        high = mid;
+        break;
+      }
+      if (net < target) low = mid;
+      else high = mid;
+    }
+    this._grossAnnual = high;
   }
 
   /** Sets the display period for amounts. */
@@ -174,7 +192,7 @@ export class TakeHomePay {
   setRegion(region: TaxRegion): void {
     this._region = region;
     this._config = getTaxYearConfig(
-      this._config.year as TaxYear,
+      taxYear(this._config.year),
       region,
     );
   }
@@ -235,25 +253,18 @@ export class TakeHomePay {
 
     if (this._pension.type === PensionType.Percent) {
       return Math.round(
-        (earningsBase * this._pension.percent) / 100,
+        percentOf(earningsBase, this._pension.percent),
       );
     }
     return Math.min(this._pension.amount, earningsBase);
   }
 
+  private get _basis(): BasisRules {
+    return PENSION_BASES[this._pensionBasis];
+  }
+
   private get _pensionEarningsBase(): number {
-    if (
-      this._pensionBasis === PensionBasis.AutoEnrolment
-    ) {
-      const {lowerThreshold, upperThreshold} =
-        this._config.qualifyingEarnings;
-      return Math.max(
-        0,
-        Math.min(this._grossAnnual, upperThreshold) -
-          lowerThreshold,
-      );
-    }
-    return this._grossAnnual;
+    return this._basis.earningsBase(this._grossAnnual, this._config);
   }
 
   /**
@@ -262,10 +273,20 @@ export class TakeHomePay {
    * source (personal) does not.
    */
   get taxableGross(): number {
-    if (this._pensionBasis === PensionBasis.Personal) {
-      return this._grossAnnual;
-    }
-    return this._grossAnnual - this.pensionDeduction;
+    return this._basis.beforeTax
+      ? this._grossAnnual - this.pensionDeduction
+      : this._grossAnnual;
+  }
+
+  /**
+   * The pay PAYE leaves untaxed, on which tax is worked: the code's free
+   * pay, or with no code the tapered allowance plus £9 (`freePay.ts`).
+   * `personalAllowance` stays the statutory figure a payslip shows.
+   */
+  get freePay(): number {
+    return this._taxCode
+      ? this._taxCode.freePay
+      : freePayWithoutCode(this.taxableGross, this._config);
   }
 
   /** Effective Personal Allowance after taper. */
@@ -282,67 +303,9 @@ export class TakeHomePay {
 
   /** Total annual income tax. */
   get incomeTax(): number {
-    const strategy = this._taxCode?.strategy;
-
-    // NT — no tax charged
-    if (strategy === TaxStrategy.NoTax) {
-      return 0;
-    }
-
-    // K codes can have negative PA, increasing taxable
-    const taxable = Math.max(
-      0,
-      this.taxableGross - this.personalAllowance,
-    );
-
-    // Flat-rate codes bypass progressive bands
-    const isFlatRate =
-      strategy === TaxStrategy.BasicRate ||
-      strategy === TaxStrategy.HigherRate ||
-      strategy === TaxStrategy.AdditionalRate;
-
-    if (isFlatRate) {
-      const rate = this.flatTaxRate(strategy);
-      return Math.round(taxable * rate * 100) / 100;
-    }
-
-    // Progressive bands (standard codes, K, 0T, null)
-    let totalTax = 0;
-    let remaining = taxable;
-
-    for (const band of this._config.incomeTaxBands) {
-      const bandWidth = band.max - band.min;
-      const amountInBand = Math.min(
-        remaining, bandWidth,
-      );
-
-      if (amountInBand > 0) {
-        totalTax += amountInBand * band.rate;
-        remaining -= amountInBand;
-      }
-
-      if (remaining <= 0) break;
-    }
-
-    return Math.round(totalTax * 100) / 100;
-  }
-
-  private flatTaxRate(strategy: TaxStrategy): number {
-    // All three by NAME, and all three throwing. Band ORDER is not
-    // band identity: `bands[0]` is the basic rate in rUK but the
-    // 19% starter rate in Scotland, and the last band is Scotland's
-    // 48% top rate — so a positional fallback answers a tax-code
-    // question with whichever band happens to sit there.
-    const rateOf = (name: string) =>
-      taxBandByName(this._config, name).rate;
-
-    if (strategy === TaxStrategy.BasicRate) {
-      return rateOf(TAX_BAND_NAMES.basicRate);
-    }
-    if (strategy === TaxStrategy.HigherRate) {
-      return rateOf(TAX_BAND_NAMES.higherRate);
-    }
-    return topMarginalBand(this._config).rate;
+    // The sum of the breakdown's rows, whatever the code, so the two
+    // cannot disagree by a penny.
+    return sumPence(this._bandRows.map((row) => row.taxPaid));
   }
 
   /**
@@ -352,8 +315,7 @@ export class TakeHomePay {
    * other pension basis leaves the full gross intact.
    */
   private get _contractualEarnings(): number {
-    return this._pensionBasis ===
-      PensionBasis.SalarySacrifice
+    return this._basis.beforeNi
       ? this._grossAnnual - this.pensionDeduction
       : this._grossAnnual;
   }
@@ -364,29 +326,7 @@ export class TakeHomePay {
    * is calculated on the lower amount.
    */
   get nationalInsurance(): number {
-    const ni = this._config.nationalInsurance;
-    const earnings = this._contractualEarnings;
-
-    if (earnings <= ni.primaryThreshold) {
-      return 0;
-    }
-
-    let total = 0;
-
-    const mainRateEarnings = Math.min(
-      earnings, ni.upperEarningsLimit,
-    );
-    const mainRateAmount =
-      mainRateEarnings - ni.primaryThreshold;
-    total += mainRateAmount * ni.mainRate;
-
-    if (earnings > ni.upperEarningsLimit) {
-      const upperRateAmount =
-        earnings - ni.upperEarningsLimit;
-      total += upperRateAmount * ni.upperRate;
-    }
-
-    return Math.round(total * 100) / 100;
+    return this.niBreakdown.total;
   }
 
   /**
@@ -394,16 +334,15 @@ export class TakeHomePay {
    * provider for relief-at-source (personal) pensions.
    */
   get pensionTaxRelief(): number {
-    if (this._pensionBasis !== PensionBasis.Personal) {
-      return 0;
-    }
-    return (
-      Math.round(
-        this.pensionDeduction *
-          BASIC_RATE_RELIEF_GROSS_UP *
-          100,
-      ) / 100
-    );
+    const {reliefAtSource} = this._basis.split(this.pensionDeduction);
+    if (reliefAtSource === 0) return 0;
+    // Relief at source is at the rest of the UK's basic rate even for a
+    // Scottish taxpayer, grossing a net contribution up by b / (1 − b).
+    const basic = taxBandByName(
+      getTaxYearConfig(taxYear(this._config.year), TAX_REGIONS.rUK),
+      TAX_BAND_NAMES.basicRate,
+    ).rate;
+    return roundPence(reliefAtSource * basic / (1 - basic));
   }
 
   /**
@@ -411,23 +350,17 @@ export class TakeHomePay {
    * active plans.
    */
   get studentLoanDeduction(): number {
-    let total = 0;
-    const earnings = this._contractualEarnings;
+    // Each plan is worked and rounded on its own, as HMRC's
+    // student-loan test data does, and the deduction is their sum.
+    return sumPence(this.studentLoanBreakdown.map((loan) => loan.deduction));
+  }
 
-    for (const plan of this._studentLoanPlans) {
-      const config =
-        this._config.studentLoanThresholds[plan];
-      if (
-        config !== null &&
-        earnings > config.annualThreshold
-      ) {
-        total +=
-          (earnings - config.annualThreshold) *
-          config.rate;
-      }
-    }
-
-    return Math.round(total * 100) / 100;
+  private get _loanAmounts() {
+    return loanAmounts(
+      this._contractualEarnings,
+      this._studentLoanPlans,
+      this._config.studentLoanThresholds,
+    );
   }
 
   /** Annual net (take-home) pay. */
@@ -450,7 +383,7 @@ export class TakeHomePay {
       this.nationalInsurance +
       this.pensionDeduction +
       this.studentLoanDeduction;
-    return (totalDeductions / this._grossAnnual) * 100;
+    return asPercent(totalDeductions / this._grossAnnual);
   }
 
   /** Marginal tax rate (rate on next £1 of income). */
@@ -459,7 +392,7 @@ export class TakeHomePay {
     const newNet = this._netAtGross(
       this._grossAnnual + 1,
     );
-    return (1 - (newNet - currentNet)) * 100;
+    return asPercent(1 - (newNet - currentNet));
   }
 
   /**
@@ -481,60 +414,24 @@ export class TakeHomePay {
 
   // ─── Annual allowance ────────────────────────────
 
-  /**
-   * Member pension contributions added back for adjusted
-   * income — net-pay schemes only. Relief-at-source
-   * (personal) affects threshold income instead, and
-   * salary sacrifice is treated as an employer
-   * contribution; neither is a member add-back here.
-   */
-  private get _aaMemberContributions(): number {
-    const isNetPay =
-      this._pensionBasis === PensionBasis.Employer ||
-      this._pensionBasis === PensionBasis.AutoEnrolment;
-    return isNetPay ? this.pensionDeduction : 0;
-  }
-
-  private get _aaIncomeInputs(): AnnualAllowanceIncomeInputs {
-    const dbInput =
-      this._dbAnnualAccrual * DB_PENSION_INPUT_MULTIPLIER;
-    const member = this._aaMemberContributions;
-
-    const ras =
-      this._pensionBasis === PensionBasis.Personal
-        ? this.pensionDeduction
-        : 0;
-    const salarySacrifice =
-      this._pensionBasis === PensionBasis.SalarySacrifice
-        ? this.pensionDeduction
-        : 0;
-
-    // Employer element = explicit employer contribution
-    // + salary sacrifice (an employer contribution) + the
-    // DB employer element (DB input − member contribution).
-    const employer =
-      this._employerContribution +
-      salarySacrifice +
-      Math.max(0, dbInput - member);
-
+  private get _pensionSaving(): PensionSaving {
     return {
-      netIncome:
-        this.taxableGross + this._otherTaxableIncome,
-      memberContributions: member,
-      employerContributions: employer,
-      reliefAtSourceContributions: ras,
-      newSalarySacrifice: salarySacrifice,
+      split: this._basis.split(this.pensionDeduction),
+      taxableGross: this.taxableGross,
+      otherTaxableIncome: this._otherTaxableIncome,
+      employerContribution: this._employerContribution,
+      dbAnnualAccrual: this._dbAnnualAccrual,
     };
   }
 
   /** Threshold income for the annual-allowance taper. */
   get thresholdIncome(): number {
-    return calculateThresholdIncome(this._aaIncomeInputs);
+    return calculateThresholdIncome(allowanceIncomes(this._pensionSaving));
   }
 
   /** Adjusted income for the annual-allowance taper. */
   get adjustedIncome(): number {
-    return calculateAdjustedIncome(this._aaIncomeInputs);
+    return calculateAdjustedIncome(allowanceIncomes(this._pensionSaving));
   }
 
   /**
@@ -558,16 +455,7 @@ export class TakeHomePay {
    * is member plus employer contributions.
    */
   get pensionInput(): number {
-    const dbInput =
-      this._dbAnnualAccrual * DB_PENSION_INPUT_MULTIPLIER;
-    if (dbInput > 0) {
-      return dbInput;
-    }
-    const member =
-      this._pensionBasis === PensionBasis.None
-        ? 0
-        : this.pensionDeduction;
-    return member + this._employerContribution;
+    return pensionInput(this._pensionSaving);
   }
 
   /**
@@ -585,14 +473,7 @@ export class TakeHomePay {
   // ─── Display Values (adjusted for period) ────────
 
   private get _periodDivisor(): number {
-    switch (this._period) {
-      case Period.Weekly:
-        return 52;
-      case Period.Monthly:
-        return 12;
-      case Period.Annual:
-        return 1;
-    }
+    return PERIODS_PER_YEAR[this._period];
   }
 
   get displayGross(): number {
@@ -623,182 +504,76 @@ export class TakeHomePay {
 
   // ─── Breakdowns ──────────────────────────────────
 
-  /** Income tax breakdown by band. */
+  /**
+   * Income tax breakdown by band. The allowance row shows the statutory
+   * allowance, as a payslip and HMRC's estimator do; the bands are worked
+   * on pay after free pay, £9 more (see `freePay`).
+   */
   get taxBreakdown(): TaxBandBreakdown[] {
     const pa = this.personalAllowance;
-    const taxable = Math.max(
-      0, this.taxableGross - pa,
-    );
-    const breakdown: TaxBandBreakdown[] = [];
+    return [
+      {
+        name: 'Personal Allowance',
+        rate: 0,
+        taxableAmount: Math.min(pa, this.taxableGross),
+        taxPaid: 0,
+      },
+      ...this._bandRows,
+    ];
+  }
 
-    const paUsed = Math.min(pa, this.taxableGross);
-    breakdown.push({
-      name: 'Personal Allowance',
-      rate: 0,
-      taxableAmount: paUsed,
-      taxPaid: 0,
-    });
-
-    let remaining = taxable;
-
-    for (const band of this._config.incomeTaxBands) {
-      const bandWidth = band.max - band.min;
-      const amountInBand = Math.min(
-        remaining, bandWidth,
-      );
-
-      breakdown.push({
+  /** Tax in each band the taxable income reaches, to the penny. */
+  private get _bandRows(): TaxBandBreakdown[] {
+    // K codes give negative free pay, increasing taxable.
+    const taxable = Math.max(0, this.taxableGross - this.freePay);
+    const code = this._taxCode;
+    const strategy = code?.strategy;
+    if (strategy === TaxStrategy.NoTax) return [];
+    const chargesOneRate = strategy === TaxStrategy.BasicRate
+      || strategy === TaxStrategy.FlatRate;
+    if (code && chargesOneRate) {
+      const band = flatRateBand(this._config, code);
+      return [{
         name: band.name,
         rate: band.rate,
-        taxableAmount: amountInBand,
-        taxPaid:
-          Math.round(
-            amountInBand * band.rate * 100,
-          ) / 100,
-      });
-
-      remaining -= amountInBand;
-      if (remaining <= 0) break;
+        taxableAmount: taxable,
+        taxPaid: roundPence(taxable * band.rate),
+      }];
     }
-
-    return breakdown;
+    return amountsByBand(taxable, this._config.incomeTaxBands)
+      .map(({band, amount}) => ({
+        name: band.name,
+        rate: band.rate,
+        taxableAmount: amount,
+        taxPaid: roundPence(amount * band.rate),
+      }));
   }
 
   /** National Insurance breakdown. */
   get niBreakdown(): NIBreakdown {
     const ni = this._config.nationalInsurance;
-    const earnings = this._contractualEarnings;
-
-    const belowThreshold = Math.min(
-      earnings, ni.primaryThreshold,
-    );
-
-    let mainRateAmount = 0;
-    let mainRateTax = 0;
-    let upperRateAmount = 0;
-    let upperRateTax = 0;
-
-    if (earnings > ni.primaryThreshold) {
-      mainRateAmount =
-        Math.min(earnings, ni.upperEarningsLimit) -
-        ni.primaryThreshold;
-      mainRateTax =
-        Math.round(
-          mainRateAmount * ni.mainRate * 100,
-        ) / 100;
-    }
-
-    if (earnings > ni.upperEarningsLimit) {
-      upperRateAmount =
-        earnings - ni.upperEarningsLimit;
-      upperRateTax =
-        Math.round(
-          upperRateAmount * ni.upperRate * 100,
-        ) / 100;
-    }
-
+    const amounts = niAmounts(this._contractualEarnings, ni);
+    const mainRateTax = roundPence(amounts.mainRateAmount * ni.mainRate);
+    const upperRateTax = roundPence(amounts.upperRateAmount * ni.upperRate);
     return {
-      belowThreshold,
-      mainRateAmount,
+      ...amounts,
       mainRateTax,
-      upperRateAmount,
       upperRateTax,
-      total: mainRateTax + upperRateTax,
+      total: sumPence([mainRateTax, upperRateTax]),
     };
   }
 
   /** Student loan breakdown by plan. */
   get studentLoanBreakdown(): StudentLoanBreakdown[] {
-    const breakdown: StudentLoanBreakdown[] = [];
-    const earnings = this._contractualEarnings;
-
-    for (const plan of this._studentLoanPlans) {
-      const config =
-        this._config.studentLoanThresholds[plan];
-      if (config === null) continue;
-
-      const amount = Math.max(
-        0,
-        earnings - config.annualThreshold,
-      );
-      const deduction =
-        amount > 0
-          ? Math.round(amount * config.rate * 100) /
-            100
-          : 0;
-
-      breakdown.push({
-        plan,
-        threshold: config.annualThreshold,
-        rate: config.rate,
-        amount,
-        deduction,
-      });
-    }
-
-    return breakdown;
-  }
-
-  /** List of calculation assumptions. */
-  get assumptions(): string[] {
-    const pensionAssumptions: Record<
-      PensionBasis,
-      string
-    > = {
-      [PensionBasis.None]:
-        'No pension contributions',
-      [PensionBasis.AutoEnrolment]:
-        'Auto-enrolment pension ' +
-        '(contributions on qualifying earnings only)',
-      [PensionBasis.Employer]:
-        'Employer pension / NET pay arrangement ' +
-        '(pension reduces tax but not NI)',
-      [PensionBasis.SalarySacrifice]:
-        'Salary sacrifice ' +
-        '(pension reduces both tax and NI)',
-      [PensionBasis.Personal]:
-        'Personal pension / relief at source ' +
-        '(provider reclaims basic-rate relief)',
-    };
-
-    const STUDENT_LOAN_LABELS: Record<
-      StudentLoanPlan,
-      string
-    > = {
-      [StudentLoanPlan.Plan1]: 'Plan 1',
-      [StudentLoanPlan.Plan2]: 'Plan 2',
-      [StudentLoanPlan.Plan4]: 'Plan 4',
-      [StudentLoanPlan.Plan5]: 'Plan 5',
-      [StudentLoanPlan.Postgraduate]: 'Postgraduate',
-    };
-
-    const studentLoanText =
-      this._studentLoanPlans.size === 0
-        ? 'No student loan deductions'
-        : 'Student loan repayment: ' +
-          Array.from(this._studentLoanPlans)
-            .map(p => STUDENT_LOAN_LABELS[p])
-            .join(', ');
-
-    return [
-      this._region === TAX_REGIONS.scotland
-        ? 'Scottish income tax rates'
-        : 'England, Wales, or Northern Ireland ' +
-          'tax rates',
-      'Single PAYE employment',
-      studentLoanText,
-      pensionAssumptions[this._pensionBasis],
-      this._taxCode
-        ? `Tax code: ${this._taxCode.code}`
-        : 'Standard tax code (1257L) ' +
-          '– no special circumstances',
-      'No additional taxable benefits',
-    ];
+    return this._loanAmounts.map((loan) => ({
+      ...loan,
+      deduction: roundPence(loan.amount * loan.rate),
+    }));
   }
 
   /** Current tax year. */
-  get taxYear(): string {
-    return this._config.year;
+  get taxYear(): TaxYear {
+    return taxYear(this._config.year);
   }
 
   /** Current pension basis. */

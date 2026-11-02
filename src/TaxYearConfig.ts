@@ -3,6 +3,7 @@ import type {
   NIThresholds,
   StudentLoanPlan,
   StudentLoanThreshold,
+  YearLabel,
 } from './types.js';
 import {TAX_BAND_NAMES} from './types.js';
 
@@ -52,7 +53,7 @@ export interface AnnualAllowanceConfig {
  */
 interface TaxYearConfigBase {
   /** Tax year identifier, e.g. '2024-25' */
-  year: string;
+  year: YearLabel;
 
   /** Personal Allowance - income below this is tax-free */
   personalAllowance: number;
@@ -63,7 +64,21 @@ interface TaxYearConfigBase {
    */
   personalAllowanceTaperStart: number;
 
-  /** Income tax bands — varies by region */
+  /**
+   * Income tax bands, in order, on TAXABLE income: pay less free pay
+   * (`freePay.ts`). The additional rate (Scotland's top rate)
+   * starts where the allowance has tapered to nil, so its edge is
+   * £125,140 on taxable and total income alike; subtracting the
+   * allowance from it, as from the lower edges, overtaxes everyone
+   * above about £116,760.
+   *
+   * rUK: https://www.gov.uk/government/publications/rates-and-allowances-income-tax/income-tax-rates-and-allowances-current-and-past
+   * Scotland: no published table is cited yet; its bands are pinned by
+   * HMRC's payroll test data alone. That data, run in
+   * `tests/regression/hmrc.test.ts`, covers 2025-26 and 2026-27 in every
+   * region; 2023-24 and 2024-25 have no pack and rest on the snapshots:
+   * https://www.gov.uk/government/collections/software-developers-payroll-test-data
+   */
   incomeTaxBands: TaxBand[];
 
   /** National Insurance thresholds and rates */
@@ -92,20 +107,6 @@ interface TaxYearConfigBase {
   /** Display name for UI */
   displayName: string;
 
-  /**
-   * Standard contracted weekly hours for the region — the divisor
-   * {@link hoursPerYear} uses to turn an annual salary into an
-   * hourly rate.
-   *
-   * Not a statutory figure: there is no UK-wide contracted week.
-   * These are the public-sector full-time weeks the regions
-   * actually use (37.5 for rUK; Scotland reduced to 37 from
-   * 1 April 2024 and to 36 from 1 April 2026). A caller whose
-   * contract differs should convert with its own hours rather
-   * than read this.
-   */
-  standardWeeklyHours: number;
-
   /** Pension annual allowance limits and taper thresholds. */
   annualAllowance: AnnualAllowanceConfig;
 }
@@ -130,31 +131,14 @@ export type TaxYearConfig =
   | TaxYearConfigUk
   | TaxYearConfigScotland;
 
+
 /**
- * Annual contracted hours: weekly hours x the number of weeks in a
- * year, 365/7 ≈ 52.143.
- *
- * NOT 52. A calendar year is 52 weeks and one day, and every publisher
- * that prints an hourly rate beside an annual salary divides by the
- * longer year — so 52 produces a rate no publisher gives, about 0.3%
- * high, roughly 4p an hour at Band 1.
- *
- * 365/7 is the ordinary UK payroll convention for converting between
- * annual and hourly pay, and it is what employers' own published rate
- * tables divide by. Leap years are ignored, as those tables ignore
- * them: the convention is 365/7, not 365.25/7.
- *
- * The evidence for it is a domain matter and lives with the domain —
- * `tests/fixtures/hourly-rate-crosscheck.csv` pins this function
- * against rates a publisher printed beside the annual salaries they
- * came from, at three different weekly hours, which is what rules out
- * a coincidence at any one of them.
+ * Both tapers withdraw £1 for every £2 of income over their limit: the
+ * Personal Allowance over £100,000 (gov.uk, "Income Tax rates and
+ * allowances for current and past years") and the annual allowance over
+ * the adjusted-income limit (HMRC PTM057100).
  */
-export function hoursPerYear(
-  config: TaxYearConfig,
-): number {
-  return (config.standardWeeklyHours * 365) / 7;
-}
+const INCOME_PER_POUND_WITHDRAWN = 2;
 
 /**
  * The higher-rate band for a region.
@@ -167,9 +151,8 @@ export function hoursPerYear(
  * exists.
  *
  * One producer, so a caller cannot disagree with another about which
- * band is "the higher band" — the two matching rules that used to
- * exist here could diverge on a rename and tax the same salary at
- * two different rates.
+ * band is "the higher band": two rules for it could diverge on a
+ * rename and tax the same salary at two different rates.
  */
 export function taxBandByName(
   config: TaxYearConfig,
@@ -192,36 +175,9 @@ export function higherRateBand(
   return taxBandByName(config, TAX_BAND_NAMES.higherRate);
 }
 
-/**
- * The band a D1 / top-rate code is taxed at.
- *
- * Named differently by region and that is the whole reason this
- * exists: rUK calls it the Additional Rate, Scotland the Top Rate.
- * Reading the LAST band happens to be right for both today, which
- * is why the positional version survived — but it answers "which
- * band is last" when the question is "which band is the top
- * marginal one", and those come apart the moment a region adds a
- * band above it.
- */
-export function topMarginalBand(
-  config: TaxYearConfig,
-): TaxBand {
-  const named = config.incomeTaxBands.find(
-    (b) => b.name === TAX_BAND_NAMES.additionalRate
-      || b.name === TAX_BAND_NAMES.topRate,
-  );
-  if (!named) {
-    throw new Error(
-      'topMarginalBand: no '
-      + `${TAX_BAND_NAMES.additionalRate} or `
-      + `${TAX_BAND_NAMES.topRate} for ${config.region}`,
-    );
-  }
-  return named;
-}
-
-/** Gross income at which the higher rate starts — the personal
- *  allowance plus the band's own lower bound. */
+/** The published gross income at which the higher rate starts: the
+ *  statutory allowance plus the band's own lower bound (£50,270). PAYE
+ *  charges it £9 later, on pay above free pay (`freePay.ts`). */
 export function higherRateThreshold(
   config: TaxYearConfig,
 ): number {
@@ -238,17 +194,24 @@ export function calculateTaperedPersonalAllowance(
   grossIncome: number,
   config: TaxYearConfig,
 ): number {
-  if (grossIncome <= config.personalAllowanceTaperStart) {
-    return config.personalAllowance;
-  }
+  return Math.max(0, allowanceLeft(grossIncome, config));
+}
 
-  const excessIncome =
-    grossIncome - config.personalAllowanceTaperStart;
-  const reduction = Math.floor(excessIncome / 2);
-  const taperedAllowance =
-    config.personalAllowance - reduction;
-
-  return Math.max(0, taperedAllowance);
+/**
+ * The allowance less the taper, before it is held at nil: negative once
+ * the taper would take more than the whole allowance. HMRC's take-home
+ * estimator frees £9 above this, so the two differ just past nil
+ * (`freePay.ts`).
+ */
+export function allowanceLeft(
+  grossIncome: number,
+  config: TaxYearConfig,
+): number {
+  const excessIncome = Math.max(
+    0, grossIncome - config.personalAllowanceTaperStart,
+  );
+  return config.personalAllowance
+    - Math.floor(excessIncome / INCOME_PER_POUND_WITHDRAWN);
 }
 
 /**
@@ -384,7 +347,7 @@ export function calculateTaperedAnnualAllowance(
 
   const excessIncome =
     adjustedIncome - aa.adjustedIncomeLimit;
-  const reduction = Math.floor(excessIncome / 2);
+  const reduction = Math.floor(excessIncome / INCOME_PER_POUND_WITHDRAWN);
   const taperedAllowance = aa.standard - reduction;
 
   return Math.max(aa.taperFloor, taperedAllowance);

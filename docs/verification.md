@@ -1,14 +1,39 @@
 # Verification
 
-How `paye-calc` results are cross-checked against HMRC's own tools.
+How `paye-calc` results are checked against HMRC's own data, tools and
+published examples.
 
 ## Income tax & National Insurance
 
-The core take-home engine is regression-tested against HMRC figures in
-`tests/fixtures/` (e.g. `hmrc-ni-crosscheck.csv`). For manual spot-checks
-use HMRC's **PAYE tax calculator** or **Basic PAYE Tools** (HMRC's own
-payroll engine). A fixture cross-checking this engine against Basic PAYE
-Tools is not yet written.
+Income tax is tested against HMRC's own figures: every row of HMRC's
+payroll test data for 2025-26 and 2026-27 ([Software developers payroll
+test data](https://www.gov.uk/government/collections/software-developers-payroll-test-data)),
+transcribed in `tests/fixtures/hmrc/` and run by
+`tests/regression/hmrc.test.ts`. HMRC's rows are pay periods and the library
+is annual, so each row is scaled to a year and back; the test says how. NI is
+checked against the category A sheet of the NIC test data in the same
+collection (`tests/fixtures/hmrc/ni.ts`). HMRC's NI rows test the thresholds
+and stop just above the upper earnings limit, so the 2% upper rate is
+checked against HMRC only at its edge.
+
+Tax is worked on PAYE free pay, as
+[`how-it-works.md`](how-it-works.md#tax-is-worked-on-paye-free-pay) states,
+so these rows need no adjustment for it. The model differs from HMRC's
+packs in one respect: it works a year, not a pay period, so it does not
+round taxable pay to whole pounds each period; the test states the bound it
+allows.
+
+Take-home itself is checked against runs of HMRC's own [take-home
+estimator](https://www.tax.service.gov.uk/estimate-paye-take-home-pay),
+transcribed as printed in `tests/fixtures/hmrc/estimator.ts`, which records
+when they were run. They settle what the payroll packs leave open: how a K code
+adjusts pay, and the free pay of an allowance tapered to nil or a pound past
+it.
+
+The take-home scenarios in `tests/fixtures/scenarios/` are this model's own
+figures. They catch an unintended change, not a wrong rule, so a rule is
+only verified once an HMRC row covers it. For manual spot-checks use HMRC's
+**PAYE tax calculator** or **Basic PAYE Tools** (HMRC's own payroll engine).
 
 The rules being verified are stated in
 [`how-it-works.md`](how-it-works.md); this document is the evidence that
@@ -27,7 +52,7 @@ published worked examples from the Pensions Tax Manual (PTM057200): the
 example (threshold income £139,100, adjusted income £178,500 → £25,750).
 Those use the historical £150k/£40k regime the manual still documents;
 the arithmetic is identical to the current £260k/£60k limits, which the
-`tests/fixtures/annual-allowance-taper.csv` rows cover.
+`tests/fixtures/annual-allowance-taper.ts` rows cover.
 
 ### 2. HMRC live tool — PAAC (manual)
 
@@ -47,8 +72,8 @@ flexibly accessed, no prior-year carry-forward. PAAC returned:
 | Amount on which tax is due | **£20,000** |
 | Unused annual allowance | £0 |
 
-This matches the `mid-taper-300k` row in
-`tests/fixtures/annual-allowance-taper.csv` and the
+This matches the case "Adjusted income of £300,000 takes £20,000 off" in
+`tests/fixtures/annual-allowance-taper.ts` and the
 `availableAnnualAllowance` (£40,000) / `annualAllowanceExcess` (£20,000)
 getters exactly.
 

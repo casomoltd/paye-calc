@@ -10,6 +10,7 @@
  * higher band. Above the taper that form is wrong, and a figure worked
  * by hand pins the answer there.
  */
+import {freePayOfAllowance} from '../src/freePay';
 import {describe, expect, it} from 'vitest';
 import {grossFor} from '../src/grossFor.js';
 import {TakeHomePay} from '../src/TakeHomePay.js';
@@ -59,7 +60,8 @@ describe('grossFor, by its definition', () => {
 describe('grossFor, against the two-band closed form', () => {
   const year = taxYear('2026-27');
   const config = getTaxYearConfig(year, 'rUK');
-  const allowance = config.personalAllowance;
+  // PAYE taxes pay above the free pay, £9 over the allowance: £12,579.
+  const allowance = freePayOfAllowance(config.personalAllowance);
   const [basic, higher] = config.incomeTaxBands;
   const basicTop = allowance + basic.max;
   const twoBand = (target: number) => {
@@ -88,15 +90,15 @@ describe('grossFor, against the two-band closed form', () => {
     expect(net(twoBand(target), year, 'rUK')).toBeLessThan(target);
   });
 
-  it('is £118,999.18 for £80,000 after tax, worked by hand', () => {
-    // 2026-27, rest of UK: allowance £12,570, 20% on the first £37,700
-    // taxable, 40% to £112,570, 45% above; the allowance reduced by £1
-    // for each whole £2 over £100,000. Near £119,000 the reduction is
-    // £9,499, leaving £3,071, so taxable income is past £112,570 and
-    // tax is 7,540 + 29,948 + 45% of (gross − 3,071 − 112,570)
-    // = 0.45 × gross − 14,550.45. Net is 0.55 × gross + 14,550.45,
-    // which reaches £80,000 at £118,999.18 (tax rounds to £38,999.18);
-    // at £118,999.17 tax still rounds to £38,999.18, leaving £79,999.99.
-    expect(grossFor(80_000, year, 'rUK')).toBeCloseTo(118_999.18, 9);
+  it('is £118,570.66 for £80,000 after tax, worked by hand', () => {
+    // 2026-27, rest of UK: allowance £12,570, reduced by £1 for each whole
+    // £2 over £100,000; PAYE frees the allowance left plus £9; 20% on the
+    // first £37,700 taxed, 40% to £125,140. Near £118,570 the reduction is
+    // £9,285, leaving £3,285 and freeing £3,294, so tax is
+    // 7,540 + 40% of (gross − 3,294 − 37,700) = 0.4 × gross − 8,857.60.
+    // Net is 0.6 × gross + 8,857.60, which reaches £80,000 at £118,570.66
+    // once tax is rounded to the penny (38,570.664 → £38,570.66); a penny
+    // less leaves £79,999.99.
+    expect(grossFor(80_000, year, 'rUK')).toBeCloseTo(118_570.66, 9);
   });
 });

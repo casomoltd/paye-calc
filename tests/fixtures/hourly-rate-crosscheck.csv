@@ -1,7 +1,0 @@
-label,taxYear,region,gross,expectedWeeklyHours,expectedHourlyGross,source
-Scotland Band 1 2025-26,2025-26,scotland,25597,37,13.27,PCS(AFC)2026/1 para 7 (37 Hour Week)
-Scotland Band 1 2026-27,2026-27,scotland,26557,36,14.15,PCS(AFC)2026/1 Annex B (36 Hour Week)
-Scotland Band 2 pt2 2026-27,2026-27,scotland,28988,36,15.44,PCS(AFC)2026/1 Annex B (36 Hour Week)
-Scotland Band 4 pt2 2026-27,2026-27,scotland,34303,36,18.27,PCS(AFC)2026/1 Annex B (36 Hour Week)
-Scotland Band 5 pt1 2026-27,2026-27,scotland,34544,36,18.40,PCS(AFC)2026/1 Annex B (36 Hour Week)
-Wales living-wage floor 2026-27,2026-27,rUK,26300,37.5,13.45,AfC(W) 01/2026 living wage pair (37.5 Hour Week)
