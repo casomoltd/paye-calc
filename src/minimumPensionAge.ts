@@ -13,13 +13,21 @@
  * protected pension age, are not modelled.
  */
 
+const RISE = {from: new Date(2028, 3, 6), age: 57};
+
 /** Each age and the day it applies from, latest first; the last applies
  *  from the beginning, so every date finds one. */
 const STEPS: readonly {readonly from: Date | null; readonly age: number}[] = [
-  {from: new Date(2028, 3, 6), age: 57},
+  RISE,
   {from: new Date(2010, 3, 6), age: 55},
   {from: null, age: 50},
 ];
+
+/** The law's latest rise: the age and the day it applies from. A fresh date
+ *  each call, since a caller setting one would move the rule for everyone. */
+export function minimumPensionAgeRise(): {from: Date; age: number} {
+  return {from: new Date(RISE.from), age: RISE.age};
+}
 
 /** The normal minimum pension age on the day benefits are drawn. */
 export function minimumPensionAge(on: Date): number {

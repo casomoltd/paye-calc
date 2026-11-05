@@ -5,7 +5,7 @@
  * source the library cites, so a mistyped step in either place fails.
  */
 import {describe, expect, it} from 'vitest';
-import {minimumPensionAge} from '../src/index.js';
+import {minimumPensionAge, minimumPensionAgeRise} from '../src/index.js';
 
 describe('minimumPensionAge', () => {
   it('is 50 before 6 April 2010', () => {
@@ -23,6 +23,16 @@ describe('minimumPensionAge', () => {
     // s.279(1)(a)(iii): "on and after 6 April 2028, 57"
     expect(minimumPensionAge(new Date(2028, 3, 6))).toBe(57);
     expect(minimumPensionAge(new Date(2048, 2, 31))).toBe(57);
+  });
+
+  it('names the latest rise', () => {
+    // s.279(1)(a)(iii): "on and after 6 April 2028, 57"
+    expect(minimumPensionAgeRise()).toEqual({from: new Date(2028, 3, 6), age: 57});
+  });
+
+  it('hands out a date no caller can move the rule with', () => {
+    minimumPensionAgeRise().from.setFullYear(2000);
+    expect(minimumPensionAge(new Date(2028, 3, 5))).toBe(55);
   });
 
   it('refuses something that is not a date', () => {

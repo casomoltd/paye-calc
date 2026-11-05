@@ -3,7 +3,10 @@ export {payAt, grossForNet} from './pay.js';
 export type {PayInputs, PayFigures} from './pay.js';
 export {grossFor} from './grossFor.js';
 export {fullNewStatePension, statePensionYearly} from './statePension.js';
-export {minimumPensionAge} from './minimumPensionAge.js';
+export {
+  minimumPensionAge,
+  minimumPensionAgeRise,
+} from './minimumPensionAge.js';
 export {TaxCode, TaxStrategy, TAX_CODE_PREFIX} from './TaxCode.js';
 export type {TaxRule} from './TaxCode.js';
 export type {
