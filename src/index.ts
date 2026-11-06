@@ -25,7 +25,10 @@ export type {
 } from './TaxYearConfig.js';
 export {
   calculateTaperedPersonalAllowance,
+  INCOME_PER_POUND_WITHDRAWN,
+  personalAllowanceTaperBand,
   personalAllowanceTaperEnd,
+  personalAllowanceTaperRate,
   taxBandByName,
   higherRateBand,
   higherRateThreshold,

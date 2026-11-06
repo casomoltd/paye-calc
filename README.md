@@ -102,6 +102,10 @@ caller that needs one figure without a calculator
   `TAX_BAND_NAMES`, and `taxBandByName`, `basicRateBand` and
   `higherRateBand` find one in a year's config. `TaxCode.isKCode` says
   whether a code is a K code.
+- **The allowance taper** — `personalAllowanceTaperEnd` is the income at
+  which the allowance has gone, `personalAllowanceTaperBand` the band the
+  taper sits in, and `personalAllowanceTaperRate` income tax's effective rate
+  inside it; `INCOME_PER_POUND_WITHDRAWN` is the income that withdraws a pound.
 - **Periods** — `PERIODS_PER_YEAR` says how many of each `Period` make a
   year, and `PERIOD_LABELS` names each.
 - **Salary** — a negative or non-finite `GrossAnnual` or `NetAnnual` throws

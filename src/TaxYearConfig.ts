@@ -7,6 +7,7 @@ import type {
   YearLabel,
 } from './types.js';
 import {TAX_BAND_NAMES} from './types.js';
+import {uplift} from './money.js';
 
 /**
  * Pension annual allowance limits and taper thresholds —
@@ -60,8 +61,11 @@ interface TaxYearConfigBase {
   personalAllowance: number;
 
   /**
-   * Income threshold where Personal Allowance starts tapering.
-   * PA reduces by £1 for every £2 over this threshold.
+   * Income threshold where Personal Allowance starts tapering: the personal
+   * allowance taper. Income Tax Act 2007 s.35(2): "For an individual whose
+   * adjusted net income exceeds £100,000, the allowance under subsection (1)
+   * is reduced" by one half of the excess.
+   * https://www.legislation.gov.uk/ukpga/2007/3/section/35
    */
   personalAllowanceTaperStart: number;
 
@@ -132,9 +136,9 @@ export type TaxYearConfig =
 
 /**
  * Both tapers withdraw £1 for every £2 of income over their limit: the
- * Personal Allowance over £100,000 (gov.uk, "Income Tax rates and
- * allowances for current and past years") and the annual allowance over
- * the adjusted-income limit (HMRC PTM057100).
+ * personal allowance (ITA 2007 s.35(2), cited at
+ * `personalAllowanceTaperStart`) and the annual allowance over the
+ * adjusted-income limit (HMRC PTM057100).
  */
 export const INCOME_PER_POUND_WITHDRAWN = 2;
 
@@ -172,6 +176,64 @@ export function higherRateBand(
   config: TaxYearConfig,
 ): TaxBand {
   return taxBandByName(config, TAX_BAND_NAMES.higherRate);
+}
+
+/**
+ * The band the next pound of taxable income (as `incomeTaxBands` defines it)
+ * falls in, once `taxableIncome` has been taxed: the band whose range holds it, lower
+ * bound included. Found by range, not by name, because the same income
+ * can sit in differently-named bands in each region: at the allowance
+ * taper's start rUK is in the Higher Rate and Scotland in the Advanced
+ * Rate. A negative income is a caller error and an income no band holds
+ * is a gap in the year's data; both throw.
+ */
+export function taxBandAt(
+  config: TaxYearConfig,
+  taxableIncome: number,
+): TaxBand {
+  const band = config.incomeTaxBands.find(
+    (b) => taxableIncome >= b.min && taxableIncome < b.max,
+  );
+  if (!band) {
+    throw new Error(
+      `taxBandAt: no band holds ${taxableIncome} for ${config.region}`,
+    );
+  }
+  return band;
+}
+
+/**
+ * The income tax band the personal allowance taper (defined at
+ * `personalAllowanceTaperStart`) sits in: the band at its
+ * start, by range. Quoting one band for the whole taper holds only while the
+ * taper sits inside it, so this throws if a year puts a band edge inside it.
+ */
+export function personalAllowanceTaperBand(config: TaxYearConfig): TaxBand {
+  const band = taxBandAt(
+    config, config.personalAllowanceTaperStart - config.personalAllowance,
+  );
+  // Near the taper's end the allowance is all but gone, so taxable income
+  // there is within £1 of the gross: still inside the band that ends where
+  // the taper does, when the year's bands are as published.
+  const last = taxBandAt(config, personalAllowanceTaperEnd(config) - 1);
+  if (last !== band) {
+    throw new Error(
+      `personalAllowanceTaperBand: a band edge falls inside the taper for `
+      + `${config.region}`,
+    );
+  }
+  return band;
+}
+
+/**
+ * Income tax's effective marginal rate inside the personal allowance taper
+ * (National Insurance aside): the band's rate on each pound itself, plus the
+ * same rate on the allowance that pound withdraws.
+ */
+export function personalAllowanceTaperRate(config: TaxYearConfig): number {
+  return uplift(
+    personalAllowanceTaperBand(config).rate, 1 / INCOME_PER_POUND_WITHDRAWN,
+  );
 }
 
 /** The published gross income at which the higher rate starts: the
