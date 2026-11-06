@@ -137,8 +137,8 @@ target below nil, or not a finite number, throws when it is set, as
 
 **Why the effective rate always agrees with net.** Net is gross less one
 total of what leaves pay, and `effectiveTaxRate` is that total over gross,
-so it is `1 − net / gross` on every pension basis. It counts the member's pension share with the tax, as the
-deductions a payslip shows do.
+so it is `1 − net / gross` on every pension basis. It counts the member's
+pension share with the tax, as the deductions a payslip shows do.
 
 ## Relief at source is on the gross contribution
 
@@ -158,11 +158,26 @@ pot, not the member's pay.
 A relief-at-source contribution and an employer's money purchase payment
 each count as paid, since each goes to a pot of its own. Net-pay and
 salary-sacrifice contributions are taken as paid into the defined benefit
-scheme, so where it accrues a benefit they sit inside its input, worked as
+scheme, so where it accrues a benefit they sit inside its input, worked
+[in one place](#a-defined-benefit-input-is-worked-in-one-place) as
 [PTM053301](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm053301)
 states it. A net-pay AVC alongside that scheme is therefore not counted.
 The employer's share in adjusted income is that input less the member's
 own contributions, so a sacrifice is counted in it once.
+
+### A defined benefit input is worked in one place
+
+`definedBenefitInput` is the one function that works a defined benefit's
+pension input, so `DB_PENSION_INPUT_MULTIPLIER`, the CPI uplift and the
+floor on each arrangement are applied in one place. The calculator's
+`dbAnnualAccrual` goes through it too, as one arrangement whose pension
+starts at nil and ends at the accrual, in today's money.
+
+It takes a `PensionInputPeriod`: each arrangement's pension and lump sum
+at the start and the end of the period, as the caller values them, with
+the CPI that uplifts the opening values. The library knows no scheme's
+rules: which of a member's rights make up one arrangement, and what each
+is worth, are the caller's.
 
 ## Gross pension income for a net target
 

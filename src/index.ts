@@ -2,7 +2,7 @@ export {TakeHomePay} from './TakeHomePay.js';
 export {payAt, grossForNet} from './pay.js';
 export type {PayInputs, PayFigures} from './pay.js';
 export {grossFor} from './grossFor.js';
-export {PENCE_PER_POUND, roundPence} from './money.js';
+export {PENCE_PER_POUND, roundPence, uplift} from './money.js';
 export {fullNewStatePension, statePensionYearly} from './statePension.js';
 export {
   minimumPensionAge,
@@ -43,8 +43,8 @@ export type {
   AnnualAllowance,
   AllowancePay,
   AnnualAllowanceIncomeInputs,
-  OpeningAndClosing,
-  DefinedBenefitArrangement,
+  ArrangementValues,
+  PensionInputPeriod,
 } from './annualAllowance.js';
 export type {ContributionSplit} from './pensionBases.js';
 export {

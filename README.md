@@ -88,9 +88,11 @@ caller that needs one figure without a calculator
 - **Annual allowance** — `annualAllowance()` on the calculator: the
   allowance after the taper, the year's pension input and any excess
   ([what counts](docs/how-it-works.md#the-annual-allowances-pension-input)).
-  `definedBenefitInput(arrangements, cpi)` is HMRC's pension input for
-  defined benefit arrangements, each floored at nought on its own
-  ([PTM053301](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm053301)).
+  `definedBenefitInput(period)` is HMRC's pension input for a
+  `PensionInputPeriod`'s defined benefit arrangements (`ArrangementValues`),
+  each floored at nought on its own
+  ([PTM053301](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm053301),
+  [the reasoning](docs/how-it-works.md#a-defined-benefit-input-is-worked-in-one-place)).
 - **Breakdowns** — `taxBreakdown`, `niBreakdown`, and
   `studentLoanBreakdown` for detailed output. Each tax row carries a
   `kind`: the allowance, a K code's added pay
@@ -105,6 +107,8 @@ caller that needs one figure without a calculator
 - **Salary** — a negative or non-finite `GrossAnnual` or `NetAnnual` throws
   a `RangeError`, as `grossFor` does for its target; a net target of nil is
   a gross of nil.
+- **Money** — `roundPence` rounds to the penny, and `uplift(amount, rate)`
+  raises an amount by a decimal rate.
 
 ## Tax years
 

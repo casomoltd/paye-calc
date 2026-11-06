@@ -32,8 +32,8 @@ UK PAYE take-home pay calculator library.
 - `src/TaxCode.ts` — HMRC tax code parser
 - `src/TaxYearConfig.ts` — tax year config types, the band lookups
   and the personal allowance taper
-- `src/money.ts` — pence rounding, the one `charge` producer, and
-  percentages
+- `src/money.ts` — pence rounding, the one `charge` producer,
+  percentages and `uplift`
 - `src/deductions.ts` — the pay each deduction falls on: by band, by NI
   rate, by loan plan
 - `src/flatRate.ts` — the one band a BR or D code charges at

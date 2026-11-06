@@ -10,9 +10,9 @@ export function roundPence(pounds: number): number {
 }
 
 /**
- * Refuse an amount of pay that is negative or not a finite number, with a
- * RangeError naming `what` it was: no pay is below nil, and a figure worked
- * on one would be a wrong answer rather than an error.
+ * Refuse an amount of money that is negative or not a finite number, with
+ * a RangeError naming `what` it was: no pay or benefit is below nil, and a
+ * figure worked on one would be a wrong answer rather than an error.
  */
 export function assertPayAmount(pounds: number, what: string): void {
   if (!Number.isFinite(pounds) || pounds < 0) {
@@ -40,6 +40,11 @@ export function sumPence(amounts: readonly number[]): number {
 /** `percent` per cent of `amount`. */
 export function percentOf(amount: number, percent: number): number {
   return (amount * percent) / PER_CENT;
+}
+
+/** `amount` raised by `rate`, a decimal: 0.03 raises 100 to 103. */
+export function uplift(amount: number, rate: number): number {
+  return amount * (1 + rate);
 }
 
 /** A fraction written as a percentage: 0.2 is 20. */
