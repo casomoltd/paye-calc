@@ -2,10 +2,18 @@ export {TakeHomePay} from './TakeHomePay.js';
 export {payAt, grossForNet} from './pay.js';
 export type {PayInputs, PayFigures} from './pay.js';
 export {grossFor} from './grossFor.js';
+export {PENCE_PER_POUND, roundPence} from './money.js';
 export {fullNewStatePension, statePensionYearly} from './statePension.js';
 export {
   minimumPensionAge,
+  minimumPensionAgeFor,
   minimumPensionAgeRise,
+  protectedPensionAgeCutoff,
+  PROTECTED_RIGHT_BELOW_AGE,
+} from './minimumPensionAge.js';
+export type {
+  MinimumPensionAgeRise,
+  SchemeRight,
 } from './minimumPensionAge.js';
 export {TaxCode, TaxStrategy, TAX_CODE_PREFIX} from './TaxCode.js';
 export type {TaxRule} from './TaxCode.js';
@@ -22,17 +30,21 @@ export {
   higherRateBand,
   higherRateThreshold,
 } from './TaxYearConfig.js';
+export {basicRateBand} from './flatRate.js';
 export {
   annualAllowance,
   calculateTaperedAnnualAllowance,
   calculateThresholdIncome,
   calculateAdjustedIncome,
+  definedBenefitInput,
 } from './annualAllowance.js';
 export type {
   AllowanceExtras,
   AnnualAllowance,
   AllowancePay,
   AnnualAllowanceIncomeInputs,
+  OpeningAndClosing,
+  DefinedBenefitArrangement,
 } from './annualAllowance.js';
 export type {ContributionSplit} from './pensionBases.js';
 export {
@@ -55,7 +67,10 @@ export {
   NATION_KEYS,
   TAX_REGIONS,
   TAX_BAND_NAMES,
+  TAX_OPENING_ROW_NAMES,
+  TAX_ROW_KINDS,
   PERIOD_LABELS,
+  PERIODS_PER_YEAR,
   nationToTaxRegion,
   GrossAnnual,
   NetAnnual,
@@ -74,7 +89,11 @@ export type {
   Pension,
   PensionChoice,
   TaxBand,
-  TaxBandBreakdown,
+  TaxBandName,
+  TaxBreakdownRow,
+  TaxBandRow,
+  TaxOpeningRow,
+  TaxRowKind,
   NIThresholds,
   NIBreakdown,
   StudentLoanThreshold,

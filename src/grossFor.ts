@@ -12,7 +12,7 @@ import {calculateTaperedPersonalAllowance} from './TaxYearConfig.js';
 import type {TaxYearConfig} from './TaxYearConfig.js';
 import {incomeTaxRows, taxOf} from './incomeTax.js';
 import {freePayOfAllowance} from './freePay.js';
-import {PENCE_PER_POUND, roundPence} from './money.js';
+import {PENCE_PER_POUND, assertPayAmount, roundPence} from './money.js';
 
 /** A step two pounds past the taper's start: the taper takes whole pounds,
  *  £1 for each £2, so this is the shortest step that shows its rate. */
@@ -65,8 +65,8 @@ function breakpoints(config: TaxYearConfig): number[] {
 }
 
 /**
- * The smallest gross pension income, in pence, whose income tax for
- * `year` and `region` leaves at least `targetNet`.
+ * The smallest gross pension income, in pounds to the penny, whose
+ * income tax for `year` and `region` leaves at least `targetNet`.
  *
  * Income tax is the only deduction: a pension in payment carries no
  * National Insurance, no student loan repayment and no contribution of
@@ -85,14 +85,8 @@ export function grossFor(
   year: TaxYear,
   region: TaxRegion,
 ): number {
-  if (!Number.isFinite(targetNet) || targetNet < 0) {
-    throw new RangeError(
-      `Target net income ${targetNet} is not a non-negative number`,
-    );
-  }
+  assertPayAmount(targetNet, 'Target net income');
   if (targetNet === 0) return 0;
-  // In pence, as money is: a float a hair either side of a penny must
-  // not decide which penny is the answer.
   const config = getTaxYearConfig(year, region);
   const net = (gross: number) => roundPence(gross - incomeTaxOn(gross, config));
 
@@ -109,6 +103,8 @@ export function grossFor(
     : lower + (targetNet - net(lower)) * (top - lower)
       / (net(top) - net(lower));
 
+  // In pence, as money is: a float a hair either side of a penny must
+  // not decide which penny is the answer.
   const pounds = (p: number) => p / PENCE_PER_POUND;
   let pence = Math.ceil(guess * PENCE_PER_POUND);
   while (net(pounds(pence)) < targetNet) pence += 1;

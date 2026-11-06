@@ -82,8 +82,29 @@ caller that needs one figure without a calculator
   pension age on a drawing date, 55 until 5 April 2028 and 57 from 6 April
   2028, as the Finance Act 2004 sets it for any scheme outside the
   uniformed services. `minimumPensionAgeRise()` names that rise's age and day.
+  `minimumPensionAgeFor(right, on)` is a member's own minimum, given the
+  right their scheme gave them, with the protected age through the rise
+  ([rule](docs/how-it-works.md#the-minimum-pension-age)).
+- **Annual allowance** — `annualAllowance()` on the calculator: the
+  allowance after the taper, the year's pension input and any excess
+  ([what counts](docs/how-it-works.md#the-annual-allowances-pension-input)).
+  `definedBenefitInput(arrangements, cpi)` is HMRC's pension input for
+  defined benefit arrangements, each floored at nought on its own
+  ([PTM053301](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm053301)).
 - **Breakdowns** — `taxBreakdown`, `niBreakdown`, and
-  `studentLoanBreakdown` for detailed output.
+  `studentLoanBreakdown` for detailed output. Each tax row carries a
+  `kind`: the allowance, a K code's added pay
+  ([why](docs/how-it-works.md#tax-is-worked-on-paye-free-pay)), or a band;
+  only a band row carries a `rate` and `taxPaid`. The opening row is a
+  `TaxOpeningRow`, named from `TAX_OPENING_ROW_NAMES`; a band is named from
+  `TAX_BAND_NAMES`, and `taxBandByName`, `basicRateBand` and
+  `higherRateBand` find one in a year's config. `TaxCode.isKCode` says
+  whether a code is a K code.
+- **Periods** — `PERIODS_PER_YEAR` says how many of each `Period` make a
+  year, and `PERIOD_LABELS` names each.
+- **Salary** — a negative or non-finite `GrossAnnual` or `NetAnnual` throws
+  a `RangeError`, as `grossFor` does for its target; a net target of nil is
+  a gross of nil.
 
 ## Tax years
 

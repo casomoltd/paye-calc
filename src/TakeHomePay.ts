@@ -6,21 +6,27 @@ import {
   SalaryType,
   GrossAnnual,
   NO_PENSION,
-  TaxBandBreakdown,
+  TaxBreakdownRow,
   NIBreakdown,
   PensionChoice,
   StudentLoanPlan,
   StudentLoanBreakdown,
 } from './types.js';
-import {asPercent} from './money.js';
+import {asPercent, assertPayAmount} from './money.js';
 import {grossForNet, payAt} from './pay.js';
-import {allowanceRow} from './incomeTax.js';
+import {openingRow} from './incomeTax.js';
 import type {PayFigures, PayInputs} from './pay.js';
 import {annualAllowance as allowanceFor} from './annualAllowance.js';
 import type {AllowanceExtras, AnnualAllowance} from './annualAllowance.js';
 import type {TaxYearConfig} from './TaxYearConfig.js';
 import {getTaxYearConfig} from './taxYears/index.js';
 import type {TaxCode} from './TaxCode.js';
+
+/** What each kind of salary is, as a refused amount names it. */
+const SALARY_KIND: Record<SalaryType, string> = {
+  [SalaryType.Gross]: 'Gross salary',
+  [SalaryType.Net]: 'Target net salary',
+};
 
 /**
  * TakeHomePay model - calculates UK PAYE take-home pay.
@@ -64,8 +70,13 @@ export class TakeHomePay {
    * Sets the salary. Use GrossAnnual(amount) for direct gross input, or
    * NetAnnual(amount) for the gross that leaves that take-home, solved
    * against whatever else is set when a figure is read.
+   *
+   * Throws RangeError for either kind that is negative or not a finite
+   * number, as `grossFor` does (see `assertPayAmount`). A net target of
+   * nil is a gross of nil.
    */
   setSalary(salary: Salary): void {
+    assertPayAmount(salary.annual, SALARY_KIND[salary.type]);
     this._salary = salary;
     this._changed();
   }
@@ -205,13 +216,17 @@ export class TakeHomePay {
   // ─── Breakdowns ──────────────────────────────────
 
   /**
-   * Income tax breakdown by band. The allowance row shows the statutory
-   * allowance, as a payslip and HMRC's estimator do; the bands are worked
-   * on pay after free pay, £9 more (see `freePay`).
+   * Income tax breakdown by band, each row tagged with its `kind`. It
+   * opens with the statutory allowance, as a payslip and HMRC's estimator
+   * show it, or under a K code with the pay the code adds; the bands are
+   * worked on pay after free pay, £9 more (see `freePay`).
    */
-  get taxBreakdown(): TaxBandBreakdown[] {
+  get taxBreakdown(): TaxBreakdownRow[] {
     const {personalAllowance, taxableGross, taxRows} = this._pay;
-    return [allowanceRow(personalAllowance, taxableGross), ...taxRows];
+    return [
+      openingRow(personalAllowance, taxableGross, this._taxCode),
+      ...taxRows,
+    ];
   }
 
   /** National Insurance breakdown. */
@@ -252,14 +267,14 @@ export class TakeHomePay {
     };
   }
 
-  /** The figures for the salary as set: a gross as given, never below
-   *  nil, or the gross the net target needs under today's inputs. */
+  /** The figures for the salary as set: a gross as given, or the gross
+   *  the net target needs under today's inputs. */
   private get _pay(): PayFigures {
     if (!this._figures) {
       const inputs = this._inputs;
       const {annual} = this._salary;
       const gross = this._salary.type === SalaryType.Gross
-        ? Math.max(0, annual)
+        ? annual
         : grossForNet(annual, inputs);
       this._figures = payAt(gross, inputs);
     }

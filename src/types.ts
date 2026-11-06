@@ -17,6 +17,17 @@ export enum Period {
   Annual = 'annual',
 }
 
+/**
+ * How many of each period make a year, as an annual figure is divided into
+ * one: 52 weeks, as HMRC's payroll test data and GOV.UK's weekly State
+ * Pension count them, a 53rd pay week aside.
+ */
+export const PERIODS_PER_YEAR: Readonly<Record<Period, number>> = {
+  [Period.Weekly]: 52,
+  [Period.Monthly]: 12,
+  [Period.Annual]: 1,
+};
+
 /** Pension contribution type */
 export enum PensionType {
   Percent = 'percent',
@@ -69,12 +80,35 @@ export interface TaxBand {
   max: number;
 }
 
-/** Breakdown of tax paid in each band */
-export interface TaxBandBreakdown {
-  name: string;
-  rate: number;
-  taxableAmount: number;
-  taxPaid: number;
+/**
+ * One row of an income tax breakdown. `kind` says what the row is, so a
+ * caller tells the opening row from the bands without reading its name:
+ * the statutory allowance, or under a K code the pay the code adds, then
+ * a row per band the pay reaches. Only a band row carries a rate or tax.
+ */
+export type TaxBreakdownRow = TaxOpeningRow | TaxBandRow;
+
+/** The row a breakdown opens with, before the bands: the statutory
+ *  allowance, or under a K code the pay the code adds. It has no rate. */
+export type TaxOpeningRow =
+  | {
+    readonly kind: typeof TAX_ROW_KINDS.Allowance;
+    readonly name: typeof TAX_OPENING_ROW_NAMES.personalAllowance;
+    readonly taxableAmount: number;
+  }
+  | {
+    readonly kind: typeof TAX_ROW_KINDS.KCodeAddition;
+    readonly name: typeof TAX_OPENING_ROW_NAMES.kCodePayAdjustment;
+    readonly taxableAmount: number;
+  };
+
+/** A breakdown row for one band: the pay it reaches, its rate and its tax. */
+export interface TaxBandRow {
+  readonly kind: typeof TAX_ROW_KINDS.Band;
+  readonly name: string;
+  readonly rate: number;
+  readonly taxableAmount: number;
+  readonly taxPaid: number;
 }
 
 /** National Insurance thresholds */
@@ -321,9 +355,29 @@ export const TAX_REGIONS = {
   scotland: 'scotland',
 } as const;
 
-/** Canonical band names used in tax year configs */
-export const TAX_BAND_NAMES = {
+/**
+ * What a tax breakdown row is. A K code's row is pay added, never a
+ * negative allowance: HMRC's estimator prints it so, as a pay adjustment
+ * beside an allowance of nil, and a negative "taxable amount" reads as
+ * pay taken out of tax when the code puts more in.
+ */
+export const TAX_ROW_KINDS = {
+  Allowance: 'allowance',
+  KCodeAddition: 'k-code-addition',
+  Band: 'band',
+} as const;
+
+export type TaxRowKind = (typeof TAX_ROW_KINDS)[keyof typeof TAX_ROW_KINDS];
+
+/** Canonical names of a breakdown's opening row, which is not a band. */
+export const TAX_OPENING_ROW_NAMES = {
   personalAllowance: 'Personal Allowance',
+  kCodePayAdjustment: 'K Code Pay Adjustment',
+} as const;
+
+/** Canonical names of the income tax bands, as the tax year configs name
+ *  them. */
+export const TAX_BAND_NAMES = {
   starterRate: 'Starter Rate',
   basicRate: 'Basic Rate',
   intermediateRate: 'Intermediate Rate',
@@ -333,12 +387,15 @@ export const TAX_BAND_NAMES = {
   topRate: 'Top Rate',
 } as const;
 
+/** The name of an income tax band. */
+export type TaxBandName = (typeof TAX_BAND_NAMES)[keyof typeof TAX_BAND_NAMES];
+
 /**
  * Defined-benefit pension input multiplier. The pension
  * input amount for a DB scheme — the figure feeding the
  * annual-allowance adjusted-income test — is 16× the
- * annual pension accrual (plus any lump-sum growth, not
- * modelled here).
+ * growth of the annual pension, plus any lump sum's growth
+ * (`definedBenefitInput` works both).
  * Source: HMRC PTM053301 (DB pension input amount).
  */
 export const DB_PENSION_INPUT_MULTIPLIER = 16;

@@ -11,7 +11,9 @@
 import {TaxCode} from '../../src/TaxCode';
 import {describe, it, expect} from 'vitest';
 import {TakeHomePay} from '../../src/TakeHomePay';
-import {GrossAnnual, taxYear} from '../../src/types';
+import {
+  GrossAnnual, Period, PERIODS_PER_YEAR, TAX_ROW_KINDS, taxYear,
+} from '../../src/types';
 import type {YearLabel} from '../../src/types';
 import {ESTIMATOR_RUNS} from '../fixtures/hmrc/estimator';
 import {NI_CATEGORY_A} from '../fixtures/hmrc/ni';
@@ -40,14 +42,15 @@ const PAYE_TOLERANCE = 0.51;
 // rounding either side. The largest gap seen is 6.6p.
 const NI_TOLERANCE = 0.07;
 
-const PERIODS_PER_YEAR = {Weekly: 52, Monthly: 12} as const;
+/** Each fixture frequency as the library's period. */
+const FREQUENCY_PERIOD = {Weekly: Period.Weekly, Monthly: Period.Monthly} as const;
 
 /** Each workbook's nation, as a case name says it. */
 const WORKBOOK_NAMES = {rUK: 'rest of UK', scotland: 'Scotland', wales: 'Wales'};
 
 /** A sheet and row in words: who, how often paid, and on what basis. */
 function caseName(sheet: PayeSheet, row: PayeRow, line: number): string {
-  const often = sheet.periodsPerYear === PERIODS_PER_YEAR.Monthly
+  const often = sheet.periodsPerYear === PERIODS_PER_YEAR[Period.Monthly]
     ? 'monthly' : 'weekly';
   const basis = sheet.basis === 'cumulative'
     ? `cumulative, period ${row[1]}`
@@ -102,7 +105,7 @@ const niCases = NI_CATEGORY_A.flatMap(({year, rows}) =>
 
 describe('regression: HMRC NI test data', () => {
   it.each(niCases)('$label', ({year, frequency, pay, nic}) => {
-    const periods = PERIODS_PER_YEAR[frequency];
+    const periods = PERIODS_PER_YEAR[FREQUENCY_PERIOD[frequency]];
     const model = new TakeHomePay(taxYear(year), 'rUK');
     model.setSalary(GrossAnnual(pay * periods));
     expect(Math.abs(model.nationalInsurance / periods - nic))
@@ -116,14 +119,15 @@ describe('regression: HMRC take-home estimator', () => {
     if ('code' in given) model.setTaxCode(TaxCode.from(given.code));
     model.setSalary(GrossAnnual(given.gross));
     const taxByRate = model.taxBreakdown
-      .filter(({rate}) => rate > 0)
+      .filter((row) => row.kind === TAX_ROW_KINDS.Band)
       .map(({taxPaid}) => taxPaid);
     // HMRC prints a K code's negative allowance as a pay adjustment and
-    // shows the allowance as nil.
-    const allowance = model.personalAllowance;
+    // shows the allowance as nil; the breakdown's opening row says which.
+    const [opening] = model.taxBreakdown;
+    const kCode = opening.kind === TAX_ROW_KINDS.KCodeAddition;
     const reported: Record<string, unknown> = {
-      personalAllowance: Math.max(0, allowance),
-      kCodePayAdjustment: allowance < 0 ? -allowance : undefined,
+      personalAllowance: kCode ? 0 : model.personalAllowance,
+      kCodePayAdjustment: kCode ? opening.taxableAmount : undefined,
       taxByRate,
       ni: model.nationalInsurance,
       takeHome: Math.round(model.net * 100) / 100,

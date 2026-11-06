@@ -9,6 +9,7 @@ import {
   PensionPercent,
   taxYear,
   StudentLoanPlan,
+  TAX_ROW_KINDS,
 } from '../../src/types';
 import {TakeHomePay} from '../../src/TakeHomePay';
 import {TaxCode} from '../../src/TaxCode';
@@ -52,9 +53,36 @@ describe('TakeHomePay: outputs', () => {
       expect(Math.abs(model.gross - 110000)).toBeLessThan(2);
     });
 
-    it('returns 0 for negative net', () => {
-      model.setSalary(NetAnnual(-1000));
+    it('a net target of nil is a gross of nil', () => {
+      model.setSalary(NetAnnual(0));
       expect(model.gross).toBe(0);
+    });
+
+    it.each([-0.01, -1000, Number.NaN, Number.POSITIVE_INFINITY])(
+      'refuses a net target of %s, as grossFor does',
+      (net) => {
+        expect(() => model.setSalary(NetAnnual(net))).toThrow(RangeError);
+      },
+    );
+  });
+
+  describe('a gross below nil', () => {
+    it.each([-0.01, -1000, Number.NaN, Number.NEGATIVE_INFINITY])(
+      'refuses %s, as grossFor does',
+      (gross) => {
+        expect(() => model.setSalary(GrossAnnual(gross))).toThrow(RangeError);
+      },
+    );
+
+    it('keeps the salary set before the refusal', () => {
+      model.setSalary(GrossAnnual(30000));
+      expect(() => model.setSalary(GrossAnnual(-1))).toThrow(RangeError);
+      expect(model.gross).toBe(30000);
+    });
+
+    it('takes a gross of nil', () => {
+      model.setSalary(GrossAnnual(0));
+      expect(model.net).toBe(0);
     });
   });
 
@@ -104,10 +132,13 @@ describe('TakeHomePay: outputs', () => {
       expect(breakdown[0].name).toBe(
         'Personal Allowance',
       );
-      expect(breakdown[0].rate).toBe(0);
-      expect(breakdown[0].taxPaid).toBe(0);
-      expect(breakdown[1].name).toBe('Basic Rate');
-      expect(breakdown[1].rate).toBeCloseTo(0.2, 9);
+      expect(breakdown[0]).not.toHaveProperty('rate');
+      expect(breakdown[0]).not.toHaveProperty('taxPaid');
+      expect(breakdown[0].kind).toBe(TAX_ROW_KINDS.Allowance);
+      const [, basic] = breakdown;
+      if (basic.kind !== TAX_ROW_KINDS.Band) throw new Error('a band row');
+      expect(basic.name).toBe('Basic Rate');
+      expect(basic.rate).toBeCloseTo(0.2, 9);
     });
 
     it('provides NI breakdown', () => {
@@ -136,7 +167,9 @@ describe('TakeHomePay: outputs', () => {
       for (let gross = 12_000; gross <= 160_000; gross += 7.37) {
         swept.setSalary(GrossAnnual(gross));
         const loans = swept.studentLoanBreakdown.map((l) => l.deduction);
-        const bands = swept.taxBreakdown.map((b) => b.taxPaid);
+        const bands = swept.taxBreakdown
+          .filter((row) => row.kind === TAX_ROW_KINDS.Band)
+          .map((b) => b.taxPaid);
         const ni = swept.niBreakdown;
         // The loan line is the one that tells the rules apart: two
         // plans' pence can round either way. Band edges and NI

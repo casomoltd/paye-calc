@@ -1,7 +1,2 @@
 {
-  "src/minimumPensionAge.ts": {
-    "@typescript-eslint/no-magic-numbers": {
-      "count": 6
-    }
-  }
 }

@@ -117,6 +117,22 @@ export interface AnnualAllowanceIncomeInputs {
   lumpSumDeathBenefits?: number;
 }
 
+/** A defined benefit's value at the start and at the end of a year, each
+ *  in its own year's money: the opening is uplifted by the year's CPI
+ *  before it is taken away. */
+export interface OpeningAndClosing {
+  readonly opening: number;
+  readonly closing: number;
+}
+
+/** One defined benefit arrangement's benefits over the year. */
+export interface DefinedBenefitArrangement {
+  /** The defined benefit pension, a year. */
+  readonly pension: OpeningAndClosing;
+  /** The arrangement's automatic lump sum; absent where it pays none. */
+  readonly lumpSum?: OpeningAndClosing;
+}
+
 /**
  * The allowance a year's saving meets, capped at the MPAA when
  * flexibly-accessed benefits are flagged. An extra not given is nil;
@@ -148,6 +164,37 @@ export function annualAllowance(
     pensionInput: input,
     excess: Math.max(0, input - available),
   };
+}
+
+/**
+ * A year's defined benefit pension input across `arrangements` (HMRC
+ * PTM053301,
+ * https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm053301).
+ * Each arrangement's input is the growth of its pension times
+ * `DB_PENSION_INPUT_MULTIPLIER`, plus the growth of its lump sum, each
+ * after the opening value's uplift by `cpi` (a decimal: nought where the
+ * values are already in today's money). A fall in CPI uplifts nothing:
+ * Finance Act 2004 s.235(3) takes the percentage "(if any)" by which the
+ * index "is higher", so a negative `cpi` counts as nought. Each
+ * arrangement is floored at nought on its own, so a fall in one does not
+ * offset a rise in another, and the inputs are summed. A negative
+ * opening or closing value is a caller's error and throws.
+ *
+ * It assumes what the caller must make true:
+ * - no benefit was paid, transferred out or taken by a pension debit in
+ *   the year; PTM053301 adds each of those back to the closing value, and
+ *   nothing here does;
+ * - `cpi` is the caller's; HMRC's is the 12 month rise in the CPI to the
+ *   September before the tax year starts;
+ * - the deferred member exemption is not applied (PTM053301 does not
+ *   cover it), so a deferred member's growth counts as any other's.
+ */
+export function definedBenefitInput(
+  arrangements: readonly DefinedBenefitArrangement[],
+  cpi: number,
+): number {
+  return arrangements.reduce(
+    (sum, arrangement) => sum + arrangementInput(arrangement, cpi), 0);
 }
 
 /**
@@ -237,24 +284,44 @@ function allowanceIncomes(
   return {
     netIncome: saving.taxableGross + saving.otherTaxableIncome,
     memberContributions: member,
-    // The explicit employer contribution, the sacrifice, and a DB
-    // scheme's employer element (its input less the member's share).
-    employerContributions: saving.employerContribution + sacrifice
-      + Math.max(0, dbInput(saving) - member),
+    // gov.uk's taper guidance takes the employer's share as the scheme's
+    // input less the member's own contributions; the sacrifice sits in
+    // that input, so it is counted there and nowhere else.
+    employerContributions: saving.employerContribution
+      + Math.max(0, workplaceInput(saving) - member),
     reliefAtSourceContributions: reliefAtSource,
     newSalarySacrifice: sacrifice,
   };
 }
 
 /**
- * The year's pension input: a DB accrual's measured input, otherwise
- * the member's and employer's contributions.
+ * The year's pension input. A relief-at-source contribution and the
+ * employer's defined-contribution payment always count as paid: each goes
+ * to a money purchase pot of its own. The workplace scheme's input is
+ * `workplaceInput`.
  */
 function pensionInput(saving: PensionSaving): number {
-  const db = dbInput(saving);
-  if (db > 0) return db;
-  const {member, sacrifice, reliefAtSource} = saving.split;
-  return member + sacrifice + reliefAtSource + saving.employerContribution;
+  const paidToOwnPots = saving.split.reliefAtSource
+    + saving.employerContribution;
+  return workplaceInput(saving) + paidToOwnPots;
+}
+
+/**
+ * The workplace scheme's input. Net-pay and salary-sacrifice money goes
+ * to that scheme, so where it accrues a defined benefit the money is
+ * inside the DB input and is not counted again; where it accrues none,
+ * the money counts as paid.
+ */
+function workplaceInput(saving: PensionSaving): number {
+  const accruesDefinedBenefit = saving.dbAnnualAccrual > 0;
+  if (accruesDefinedBenefit) return dbInput(saving);
+  return paidToWorkplaceScheme(saving.split);
+}
+
+/** The member's contribution that goes to the workplace scheme: net pay
+ *  and salary sacrifice, but not relief at source. */
+function paidToWorkplaceScheme({member, sacrifice}: ContributionSplit): number {
+  return member + sacrifice;
 }
 
 /** An extra's amount, nil when not given. */
@@ -267,7 +334,28 @@ function amountOf(
   return amount;
 }
 
-/** A defined-benefit accrual's pension input: 16 times the accrual. */
+/** A defined-benefit accrual's pension input: one arrangement whose
+ *  pension grows from nought by the accrual, in today's money. */
 function dbInput(saving: PensionSaving): number {
-  return saving.dbAnnualAccrual * DB_PENSION_INPUT_MULTIPLIER;
+  return definedBenefitInput(
+    [{pension: {opening: 0, closing: saving.dbAnnualAccrual}}], 0);
+}
+
+/** One arrangement's input, never below nought. */
+function arrangementInput(
+  {pension, lumpSum}: DefinedBenefitArrangement, cpi: number,
+): number {
+  const lumpSumGrowth = lumpSum === undefined ? 0 : growthOf(lumpSum, cpi);
+  return Math.max(0,
+    DB_PENSION_INPUT_MULTIPLIER * growthOf(pension, cpi) + lumpSumGrowth);
+}
+
+/** Growth after the opening value's CPI uplift, which a fall in CPI
+ *  leaves at nought (Finance Act 2004 s.235(3)). */
+function growthOf({opening, closing}: OpeningAndClosing, cpi: number): number {
+  if (opening < 0 || closing < 0) {
+    throw new RangeError(
+      `A defined benefit cannot be negative: ${opening} to ${closing}`);
+  }
+  return closing - opening * (1 + Math.max(0, cpi));
 }

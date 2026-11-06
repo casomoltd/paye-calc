@@ -1,5 +1,6 @@
 import type {
   TaxBand,
+  TaxBandName,
   NIThresholds,
   StudentLoanPlan,
   StudentLoanThreshold,
@@ -140,7 +141,7 @@ export const INCOME_PER_POUND_WITHDRAWN = 2;
 /** A band by name; throws when the year has none, a data fault. */
 export function taxBandByName(
   config: TaxYearConfig,
-  name: string,
+  name: TaxBandName,
 ): TaxBand {
   const band = config.incomeTaxBands.find(
     (b) => b.name === name,

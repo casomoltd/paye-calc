@@ -112,6 +112,14 @@ estimator show them; the bands are worked £9 further on. So the higher
 rate starts at £50,279 of pay in practice, though the published
 threshold is £50,270.
 
+**A K code adds pay; it is not a negative allowance.** A K code's
+allowance is negative, and `personalAllowance` reports it so. The tax
+breakdown opens instead with a row of kind `k-code-addition`
+(`TAX_ROW_KINDS.KCodeAddition`) whose taxable amount is the positive pay
+the code adds, as HMRC's estimator prints it beside an allowance of nil.
+Every other breakdown opens with an `allowance` row, and each band row is
+of kind `band`, so a caller tells them apart by type, not by name.
+
 ## One calculation behind every figure
 
 Every take-home figure comes from one pure function, `payAt(gross,
@@ -123,7 +131,9 @@ that result. Income tax inside it comes from `incomeTaxRows` in
 it is, and the gross is solved when a figure is read, against everything
 set by then. A gross solved once and stored would go stale the moment a
 pension, code or year was set after it, with no error. The solved gross
-is the least that leaves at least the target, never a penny short.
+is the least that leaves at least the target, never a penny short. A
+target below nil, or not a finite number, throws when it is set, as
+`grossFor`'s does: no take-home is below nil.
 
 **Why the effective rate always agrees with net.** Net is gross less one
 total of what leaves pay, and `effectiveTaxRate` is that total over gross,
@@ -142,6 +152,17 @@ contribution.
 **Why gross.** A contribution quoted net and then grossed up would add
 the provider's relief to take-home pay, but the relief goes into the
 pot, not the member's pay.
+
+## The annual allowance's pension input
+
+A relief-at-source contribution and an employer's money purchase payment
+each count as paid, since each goes to a pot of its own. Net-pay and
+salary-sacrifice contributions are taken as paid into the defined benefit
+scheme, so where it accrues a benefit they sit inside its input, worked as
+[PTM053301](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm053301)
+states it. A net-pay AVC alongside that scheme is therefore not counted.
+The employer's share in adjusted income is that input less the member's
+own contributions, so a sacrifice is counted in it once.
 
 ## Gross pension income for a net target
 
@@ -165,3 +186,31 @@ allowance, so the marginal rate is 60% at the higher rate rather than
 40%. A two-band inverse is exact below the taper and asks for too
 little gross above its start; the tests pin a figure worked by hand
 there.
+
+## The minimum pension age
+
+`minimumPensionAge(on)` is the normal minimum pension age on a drawing
+date, as Finance Act 2004 s.279(1)(a) sets it: 55 until 5 April 2028, then
+57. `minimumPensionAgeFor(right, on)` is a member's own minimum, which
+the protected pension age of Sch 36 para 23ZB can hold below the law's.
+
+**Para 23ZB keeps a lower age through the 2028 rise.** A member keeps
+one if, immediately before 4 November 2021, they had a right to a
+benefit from an age below 57 (`PROTECTED_RIGHT_BELOW_AGE`), under scheme
+rules as they stood on 11 February 2021. That 57 is the protection's own
+threshold, a separate fact from the age s.279 rises to. The age they keep
+is the higher of 55 and the age of that right. The member's minimum is
+the lower of that age and the law's, so before 6 April 2028 it is 55, as
+para 23ZB(8) holds it.
+
+**Why there is no protected age on its own.** Para 23ZB(7)'s age holds
+only from 6 April 2028, so a figure without a drawing date would be wrong
+before then. The library gives the age only through
+`minimumPensionAgeFor(right, on)`, which reads the date.
+
+**The scheme's facts are the caller's.** Whether a member had the right,
+and from what age, turns on their scheme's rules, which this library
+does not hold. So a `SchemeRight` states both, and
+`protectedPensionAgeCutoff()` gives the day a scheme's library tests its
+members' joining dates against. The uniformed services' own ages, and
+the older protected ages of Sch 36 paras 22 and 23, are not modelled.

@@ -12,9 +12,9 @@ import type {
   PensionChoice,
   StudentLoanBreakdown,
   StudentLoanPlan,
-  TaxBandBreakdown,
+  TaxBandRow,
 } from './types.js';
-import {charge, percentOf, sumPence} from './money.js';
+import {assertPayAmount, charge, percentOf, sumPence} from './money.js';
 import {loanAmounts, niAmounts} from './deductions.js';
 import {incomeTaxRows, taxOf} from './incomeTax.js';
 import {freePay} from './freePay.js';
@@ -47,7 +47,7 @@ export interface PayFigures {
   /** The statutory allowance after the taper, or the code's. */
   readonly personalAllowance: number;
   /** Tax in each band; the allowance row is the façade's to show. */
-  readonly taxRows: readonly TaxBandBreakdown[];
+  readonly taxRows: readonly TaxBandRow[];
   readonly incomeTax: number;
   readonly niBreakdown: NIBreakdown;
   readonly loanRows: readonly StudentLoanBreakdown[];
@@ -120,9 +120,11 @@ export function payAt(gross: number, inputs: PayInputs): PayFigures {
 }
 
 /** The least gross that leaves at least `targetNet`, by the search
- *  described at `NET_TO_GROSS`. */
+ *  described at `NET_TO_GROSS`. Throws RangeError for a target that is
+ *  negative or not a finite number (see `assertPayAmount`). */
 export function grossForNet(targetNet: number, inputs: PayInputs): number {
-  if (targetNet <= 0) return 0;
+  assertPayAmount(targetNet, 'Target net salary');
+  if (targetNet === 0) return 0;
   const netAt = (gross: number) => payAt(gross, inputs).net;
   let low = targetNet;
   let high = targetNet * NET_TO_GROSS.highestMultiple;

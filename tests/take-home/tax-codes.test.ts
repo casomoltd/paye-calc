@@ -6,7 +6,9 @@
 
 import {TaxCode} from '../../src/TaxCode';
 import {describe, it, expect, beforeEach} from 'vitest';
-import {GrossAnnual, taxYear} from '../../src/types';
+import {
+  GrossAnnual, TAX_OPENING_ROW_NAMES, TAX_ROW_KINDS, taxYear,
+} from '../../src/types';
 import {TakeHomePay} from '../../src/TakeHomePay';
 
 describe('TakeHomePay: tax codes', () => {
@@ -48,6 +50,38 @@ describe('TakeHomePay: tax codes', () => {
       // K100 adds exactly £1,000 to pay, as HMRC's estimator shows:
       // 20% of 31,000.
       expect(model.incomeTax).toBe(6200);
+    });
+
+    it('K100: the breakdown opens with the pay the code adds', () => {
+      model.setSalary(GrossAnnual(30000));
+      model.setTaxCode(TaxCode.from('K100'));
+      const [opening, ...bands] = model.taxBreakdown;
+      // HMRC's estimator prints K100 as a £1,000 pay adjustment, not as a
+      // negative allowance.
+      expect(opening).toEqual({
+        kind: TAX_ROW_KINDS.KCodeAddition,
+        name: TAX_OPENING_ROW_NAMES.kCodePayAdjustment,
+        taxableAmount: 1000,
+      });
+      expect(bands.every((row) => row.kind === TAX_ROW_KINDS.Band)).toBe(true);
+      expect(model.taxBreakdown.every((row) => row.taxableAmount >= 0)).toBe(true);
+    });
+
+    it('a code says whether it is a K code from its letter', () => {
+      expect(TaxCode.from('K100').isKCode).toBe(true);
+      expect(TaxCode.from('SK100').isKCode).toBe(true);
+      expect(TaxCode.from('1257L').isKCode).toBe(false);
+      expect(TaxCode.from('0T').isKCode).toBe(false);
+    });
+
+    it('an L code opens with the allowance', () => {
+      model.setSalary(GrossAnnual(30000));
+      model.setTaxCode(TaxCode.from('500L'));
+      expect(model.taxBreakdown[0]).toMatchObject({
+        kind: TAX_ROW_KINDS.Allowance,
+        name: TAX_OPENING_ROW_NAMES.personalAllowance,
+        taxableAmount: 5000,
+      });
     });
 
     it('500L: custom PA', () => {

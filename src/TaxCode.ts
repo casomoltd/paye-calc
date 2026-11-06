@@ -98,6 +98,7 @@ interface TaxCodeFields {
   personalAllowance: number;
   rule: TaxRule;
   prefix: TaxCodePrefix;
+  isKCode: boolean;
 }
 
 /** The allowance a code's number stands for. */
@@ -140,11 +141,19 @@ export class TaxCode {
   /** Region prefix (S = Scotland, C = Wales). */
   readonly prefix: TaxCodePrefix;
 
+  /**
+   * Whether this is a K code, whose number is pay added to the taxed pay
+   * rather than an allowance taken off it. Read from the K the code is
+   * written with, so a caller need not infer it from the allowance's sign.
+   */
+  readonly isKCode: boolean;
+
   private constructor(fields: TaxCodeFields) {
     this.code = fields.code;
     this.personalAllowance = fields.personalAllowance;
     this.rule = fields.rule;
     this.prefix = fields.prefix;
+    this.isKCode = fields.isKCode;
   }
 
   /** The pay PAYE leaves untaxed under this code (see `freePay.ts`). */
@@ -193,8 +202,8 @@ export class TaxCode {
     const [prefix, coded] = splitPrefix(raw);
     // Strip emergency suffixes (W1, M1, X)
     const body = coded.replace(EMERGENCY_SUFFIX, '');
-    const make = (personalAllowance: number, rule: TaxRule) =>
-      new TaxCode({code: raw, personalAllowance, rule, prefix});
+    const make = (personalAllowance: number, rule: TaxRule, isKCode = false) =>
+      new TaxCode({code: raw, personalAllowance, rule, prefix, isKCode});
     const progressive = {strategy: TaxStrategy.Progressive} as const;
 
     // Special flat-rate / no-allowance codes
@@ -216,7 +225,7 @@ export class TaxCode {
     // K codes — negative allowance; standard codes — digits plus an
     // optional suffix
     const kMatch = K_CODE.exec(body);
-    if (kMatch) return make(-allowanceOf(kMatch[1]), progressive);
+    if (kMatch) return make(-allowanceOf(kMatch[1]), progressive, true);
     const numMatch = NUMERIC_CODE.exec(body);
     if (numMatch) return make(allowanceOf(numMatch[1]), progressive);
 

@@ -1,6 +1,7 @@
 import {taxYear} from '../src/types.js';
 import {describe, it, expect} from 'vitest';
 import {
+  annualAllowance,
   calculateTaperedAnnualAllowance,
   calculateThresholdIncome,
   calculateAdjustedIncome,
@@ -102,5 +103,32 @@ describe('AA taper — current limits (2025-26)', () => {
     expect(
       calculateTaperedAnnualAllowance(360000, 210000, cfg),
     ).toBe(10000);
+  });
+});
+
+describe('annualAllowance: the employer element', () => {
+  const config = getTaxYearConfig(taxYear('2024-25'), 'rUK');
+  const amounts = [0, 100, 1_000, 8_000, 40_000];
+  const taxableGross = 200_000;
+  // Every combination of the five amounts across the five inputs.
+  const cases = amounts.flatMap((member) => amounts.flatMap((sacrifice) =>
+    amounts.flatMap((reliefAtSource) => amounts.flatMap((dbAnnualAccrual) =>
+      amounts.map((employerContribution) => ({
+        split: {member, sacrifice, reliefAtSource},
+        extras: {dbAnnualAccrual, employerContribution},
+      }))))));
+
+  it('never exceeds the pension input plus an employer DC payment', () => {
+    // gov.uk's taper guidance takes the employer's share as the input less
+    // the member's own contributions, so it can never pass the input itself
+    // plus any explicit employer payment.
+    for (const {split, extras} of cases) {
+      const allowance = annualAllowance(
+        {pensionSplit: split, taxableGross}, extras, config);
+      const employerElement =
+        allowance.adjustedIncome - taxableGross - split.member;
+      expect(employerElement).toBeLessThanOrEqual(
+        allowance.pensionInput + extras.employerContribution);
+    }
   });
 });

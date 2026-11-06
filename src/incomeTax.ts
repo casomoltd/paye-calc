@@ -8,8 +8,8 @@
 import {TaxStrategy} from './TaxCode.js';
 import type {TaxCode} from './TaxCode.js';
 import type {TaxYearConfig} from './TaxYearConfig.js';
-import {TAX_BAND_NAMES} from './types.js';
-import type {TaxBand, TaxBandBreakdown} from './types.js';
+import {TAX_OPENING_ROW_NAMES, TAX_ROW_KINDS} from './types.js';
+import type {TaxBand, TaxBandRow, TaxOpeningRow} from './types.js';
 import {amountsByBand} from './deductions.js';
 import {charge, sumPence} from './money.js';
 import {freePay} from './freePay.js';
@@ -21,7 +21,7 @@ export function incomeTaxRows(
   taxableGross: number,
   config: TaxYearConfig,
   code: TaxCode | null,
-): TaxBandBreakdown[] {
+): TaxBandRow[] {
   // A K code's free pay is negative, which adds to the pay taxed.
   const taxable = Math.max(0, taxableGross - freePay(taxableGross, config, code));
   if (!code) return progressiveRows(taxable, config);
@@ -38,23 +38,31 @@ export function incomeTaxRows(
   }
 }
 
-/** The allowance row a breakdown opens with: the statutory allowance,
- *  as a payslip and HMRC's estimator show it, though the bands are
- *  worked on free pay. */
-export function allowanceRow(
+/** The row a breakdown opens with: the statutory allowance, as a payslip
+ *  and HMRC's estimator show it, though the bands are worked on free pay.
+ *  Under a K code, whose allowance is negative, the row is instead the pay
+ *  the code adds, as the estimator prints it. */
+export function openingRow(
   personalAllowance: number,
   taxableGross: number,
-): TaxBandBreakdown {
+  code: TaxCode | null,
+): TaxOpeningRow {
+  if (code?.isKCode) {
+    return {
+      kind: TAX_ROW_KINDS.KCodeAddition,
+      name: TAX_OPENING_ROW_NAMES.kCodePayAdjustment,
+      taxableAmount: -personalAllowance,
+    };
+  }
   return {
-    name: TAX_BAND_NAMES.personalAllowance,
-    rate: 0,
+    kind: TAX_ROW_KINDS.Allowance,
+    name: TAX_OPENING_ROW_NAMES.personalAllowance,
     taxableAmount: Math.min(personalAllowance, taxableGross),
-    taxPaid: 0,
   };
 }
 
 /** The tax the rows charge in all: their sum, so the two cannot differ. */
-export function taxOf(rows: readonly TaxBandBreakdown[]): number {
+export function taxOf(rows: readonly TaxBandRow[]): number {
   return sumPence(rows.map((row) => row.taxPaid));
 }
 
@@ -62,14 +70,15 @@ export function taxOf(rows: readonly TaxBandBreakdown[]): number {
 function progressiveRows(
   taxable: number,
   config: TaxYearConfig,
-): TaxBandBreakdown[] {
+): TaxBandRow[] {
   return amountsByBand(taxable, config.incomeTaxBands)
     .map(({band, amount}) => oneRateRow(amount, band));
 }
 
 /** One band's row. */
-function oneRateRow(amount: number, band: TaxBand): TaxBandBreakdown {
+function oneRateRow(amount: number, band: TaxBand): TaxBandRow {
   return {
+    kind: TAX_ROW_KINDS.Band,
     name: band.name,
     rate: band.rate,
     taxableAmount: amount,

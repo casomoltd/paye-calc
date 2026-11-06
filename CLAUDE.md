@@ -27,8 +27,8 @@ UK PAYE take-home pay calculator library.
   tax alone
 - `src/statePension.ts` — the full new State Pension rate, per tax
   year, each figure cited at its source
-- `src/minimumPensionAge.ts` — the normal minimum pension age on a
-  date, cited to the Finance Act
+- `src/minimumPensionAge.ts` — the minimum pension age on a date, the
+  law's and a member's protected one, cited to the Finance Act
 - `src/TaxCode.ts` — HMRC tax code parser
 - `src/TaxYearConfig.ts` — tax year config types, the band lookups
   and the personal allowance taper
@@ -41,7 +41,8 @@ UK PAYE take-home pay calculator library.
 - `src/pensionBases.ts` — what each pension basis does to pay, and
   relief at source
 - `src/annualAllowance.ts` — the pension annual allowance: a year's
-  saving, the taper's two incomes, the allowance and any excess
+  saving, a defined benefit's pension input, the taper's two incomes,
+  the allowance and any excess
 - `src/taxYears/` — per-year config data
 - `src/types.ts` — shared types and constants
 - `tests/fixtures/` — regression tables, typed TS: `hmrc/` (HMRC's

@@ -7,7 +7,7 @@ import {expect} from 'vitest';
 import {TakeHomePay} from '../src/TakeHomePay';
 import {roundPence} from '../src/money';
 import {
-  GrossAnnual, PensionBasis, PensionFixed, PensionPercent, taxYear,
+  GrossAnnual, PensionBasis, PensionFixed, PensionPercent, TAX_ROW_KINDS, taxYear,
 } from '../src/types';
 import type {StudentLoanPlan, TaxRegion, YearLabel} from '../src/types';
 
@@ -107,7 +107,9 @@ function reported(model: TakeHomePay): Required<Expected> {
     taxableGross: model.taxableGross,
     allowance: model.personalAllowance,
     bandTax: withoutTrailingZeros(
-      model.taxBreakdown.filter(({rate}) => rate > 0).map((band) => band.taxPaid),
+      model.taxBreakdown
+        .filter((row) => row.kind === TAX_ROW_KINDS.Band)
+        .map((band) => band.taxPaid),
     ),
     incomeTax: model.incomeTax,
     niByRate: [ni.mainRateTax, ni.upperRateTax],

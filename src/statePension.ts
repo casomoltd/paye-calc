@@ -7,7 +7,7 @@
  * National Insurance record, which is theirs to state, not this
  * library's to assume.
  */
-import {TAX_YEARS} from './types.js';
+import {Period, PERIODS_PER_YEAR, TAX_YEARS} from './types.js';
 import type {TaxYear, YearLabel} from './types.js';
 
 /**
@@ -25,7 +25,7 @@ const WEEKLY_FULL_RATE: Partial<Record<YearLabel, number>> = {
 
 /** Weeks in a State Pension year, as GOV.UK turns the weekly rate
  *  into a yearly one. */
-const WEEKS_PER_YEAR = 52;
+const WEEKS_PER_YEAR = PERIODS_PER_YEAR[Period.Weekly];
 
 /**
  * A weekly State Pension as a yearly one, the way GOV.UK converts it:

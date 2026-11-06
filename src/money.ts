@@ -10,6 +10,17 @@ export function roundPence(pounds: number): number {
 }
 
 /**
+ * Refuse an amount of pay that is negative or not a finite number, with a
+ * RangeError naming `what` it was: no pay is below nil, and a figure worked
+ * on one would be a wrong answer rather than an error.
+ */
+export function assertPayAmount(pounds: number, what: string): void {
+  if (!Number.isFinite(pounds) || pounds < 0) {
+    throw new RangeError(`${what} ${pounds} is not a non-negative number`);
+  }
+}
+
+/**
  * What a rate charges on an amount, to the penny. Every row of a
  * breakdown, tax, NI or loan, is priced here, so a row and its total
  * cannot round differently.
