@@ -12,12 +12,14 @@ describe('taxFreeChildcare', () => {
       // SI 2015/448 reg 15(1): "not expect their adjusted net income to
       // exceed £100,000 for the relevant tax year".
       incomeLimit: 100_000,
-      // gov.uk/tax-free-childcare: "£500 every 3 months (up to £2,000 a
-      // year)".
-      topUpCapPerChild: 2_000,
-      // Same page: "£1,000 every 3 months (up to £4,000 a year)" if the
-      // child is disabled.
-      topUpCapPerDisabledChild: 4_000,
+      // Childcare Payments Act 2014: a top-up of 25% (s.1(4)) on up to
+      // £2,000 paid in each 3-month period (s.19(5)(b), s.5(1)), four
+      // periods a year; gov.uk/tax-free-childcare: "£500 every 3 months
+      // (up to £2,000 a year)".
+      topUpCapPerChild: 0.25 * 2_000 * 4,
+      // s.19(5)(a): £4,000 a period for a disabled child; gov.uk: "£1,000
+      // every 3 months (up to £4,000 a year)".
+      topUpCapPerDisabledChild: 0.25 * 4_000 * 4,
     });
   });
 

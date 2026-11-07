@@ -81,6 +81,7 @@ caller that needs one figure without a calculator
 - **Tax-Free Childcare** — `taxFreeChildcare(year)`: the adjusted net
   income limit above which a parent loses it outright, and the yearly
   top-up caps per child and per disabled child.
+- **Free childcare for working parents, England** — `freeChildcareEngland(year)`: the adjusted net income limit above which a parent, or their partner, does not qualify. A scheme apart from Tax-Free Childcare, cited to its own regulations.
 - **Minimum pension age** — `minimumPensionAge(on)`: the normal minimum
   pension age on a drawing date, 55 until 5 April 2028 and 57 from 6 April
   2028, as the Finance Act 2004 sets it for any scheme outside the
@@ -88,24 +89,14 @@ caller that needs one figure without a calculator
   `minimumPensionAgeFor(right, on)` is a member's own minimum, given the
   right their scheme gave them, with the protected age through the rise
   ([rule](docs/how-it-works.md#the-minimum-pension-age)).
-- **Annual allowance** — `annualAllowance()` on the calculator: the
-  allowance after the taper, the year's pension input and any excess
-  ([what counts](docs/how-it-works.md#the-annual-allowances-pension-input)).
-  `definedBenefitInput(period)` is HMRC's pension input for a
-  `PensionInputPeriod`'s defined benefit arrangements (`ArrangementValues`),
-  each floored at nought on its own
-  ([PTM053301](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm053301),
-  [the reasoning](docs/how-it-works.md#a-defined-benefit-input-is-worked-in-one-place)).
+- **Annual allowance** — `annualAllowance()` on the calculator: the allowance after the taper, the year's pension input and any excess ([what counts](docs/how-it-works.md#the-annual-allowances-pension-input)). A defined benefit's input for a period of its own is under *Pension input periods*.
 - **Tax year ends** — `TaxYearEnd` names any tax year, published or not,
   by the calendar year it ends in; `taxYearEndFor(date)` turns a date into
   one, `taxYearStartDate(end)` and `taxYearEndDate(end)` give its opening 6
   April and closing 5 April, and `taxYearEndOf(year)` and
   `taxYearLabel(end)` cross to and from a `TaxYear` label
   ([why](docs/how-it-works.md#tax-year-ends)).
-- **Pension input periods** — `FIRST_TAX_YEAR_PENSION_INPUT_PERIOD` is
-  2016-17, the first tax year that is a pension input period, and
-  `refuseBeforePensionInputPeriods` refuses a year before it
-  ([why](docs/how-it-works.md#a-defined-benefit-input-is-worked-in-one-place)).
+- **Pension input periods** — `definedBenefitInput(period)` is HMRC's pension input for a `PensionInputPeriod`: its tax year as a `TaxYearEnd`, and its defined benefit arrangements (`ArrangementValues`), each floored at nought on its own ([PTM053301](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm053301)). A period before 2016-17, `FIRST_TAX_YEAR_PENSION_INPUT_PERIOD`, is refused; `refuseBeforePensionInputPeriods` is the same refusal for a caller reading its own periods ([why](docs/how-it-works.md#a-defined-benefit-input-is-worked-in-one-place)).
 - **Breakdowns** — `taxBreakdown`, `niBreakdown`, and
   `studentLoanBreakdown` for detailed output. Each tax row carries a
   `kind`: the allowance, a K code's added pay

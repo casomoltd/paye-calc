@@ -29,6 +29,7 @@ UK PAYE take-home pay calculator library.
   year, each figure cited at its source
 - `src/taxFreeChildcare.ts` — Tax-Free Childcare's income limit and
   top-up caps, per tax year, each figure cited at its source
+- `src/freeChildcareEngland.ts` — the income limit on England's free childcare for working parents, per tax year, cited to its own regulations
 - `src/minimumPensionAge.ts` — the minimum pension age on a date, the
   law's and a member's protected one, cited to the Finance Act
 - `src/TaxCode.ts` — HMRC tax code parser
@@ -42,9 +43,8 @@ UK PAYE take-home pay calculator library.
 - `src/freePay.ts` — PAYE free pay, on which income tax is worked
 - `src/pensionBases.ts` — what each pension basis does to pay, and
   relief at source
-- `src/annualAllowance.ts` — the pension annual allowance: a year's
-  saving, a defined benefit's pension input, the taper's two incomes,
-  the allowance and any excess
+- `src/annualAllowance.ts` — the pension annual allowance: a year's saving, the taper's two incomes, the allowance and any excess
+- `src/pensionInputPeriod.ts` — a pension input period: a defined benefit's input across its arrangements, and the first tax year that is a period
 - `src/taxYearEnd.ts` — a tax year named by the year it ends in, not
   only the published ones, and the 6 April and 5 April that bound it
 - `src/taxYears/` — per-year config data

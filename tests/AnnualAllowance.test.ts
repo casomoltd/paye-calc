@@ -5,10 +5,7 @@ import {
   calculateTaperedAnnualAllowance,
   calculateThresholdIncome,
   calculateAdjustedIncome,
-  FIRST_TAX_YEAR_PENSION_INPUT_PERIOD,
-  refuseBeforePensionInputPeriods,
 } from '../src/annualAllowance';
-import {taxYearEnd, taxYearLabel} from '../src/taxYearEnd';
 import type {TaxYearConfig} from '../src/TaxYearConfig';
 import {getTaxYearConfig} from '../src/taxYears';
 
@@ -141,19 +138,5 @@ describe('annualAllowance: the employer element', () => {
       expect(employerElement).toBeLessThanOrEqual(
         allowance.pensionInput + extras.employerContribution);
     }
-  });
-});
-
-describe('the pension input periods', () => {
-  it('begin with 2016-17', () => {
-    // Finance Act 2004 s.238ZA(3): "the tax year 2016-17 and each
-    // subsequent tax year"
-    // (https://www.legislation.gov.uk/ukpga/2004/12/section/238ZA).
-    expect(taxYearLabel(FIRST_TAX_YEAR_PENSION_INPUT_PERIOD)).toBe('2016-17');
-    expect(() => refuseBeforePensionInputPeriods('asked', taxYearEnd(2017)))
-      .not.toThrow();
-    expect(() => refuseBeforePensionInputPeriods('asked', taxYearEnd(2016)))
-      .toThrow('asked: 2015-16 is before the first tax year that is a '
-        + 'pension input period, 2016-17');
   });
 });

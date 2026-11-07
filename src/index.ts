@@ -6,6 +6,8 @@ export {PENCE_PER_POUND, roundPence, uplift} from './money.js';
 export {fullNewStatePension, statePensionYearly} from './statePension.js';
 export {taxFreeChildcare} from './taxFreeChildcare.js';
 export type {TaxFreeChildcare} from './taxFreeChildcare.js';
+export {freeChildcareEngland} from './freeChildcareEngland.js';
+export type {FreeChildcareEngland} from './freeChildcareEngland.js';
 export {
   minimumPensionAge,
   minimumPensionAgeFor,
@@ -41,10 +43,12 @@ export {
   calculateTaperedAnnualAllowance,
   calculateThresholdIncome,
   calculateAdjustedIncome,
+} from './annualAllowance.js';
+export {
   definedBenefitInput,
   FIRST_TAX_YEAR_PENSION_INPUT_PERIOD,
   refuseBeforePensionInputPeriods,
-} from './annualAllowance.js';
+} from './pensionInputPeriod.js';
 export {
   taxYearEnd, taxYearEndDate, taxYearEndFor, taxYearEndOf, taxYearLabel,
   taxYearStartDate,
@@ -56,9 +60,11 @@ export type {
   TaperIncomes,
   AllowancePay,
   AnnualAllowanceIncomeInputs,
+} from './annualAllowance.js';
+export type {
   ArrangementValues,
   PensionInputPeriod,
-} from './annualAllowance.js';
+} from './pensionInputPeriod.js';
 export type {ContributionSplit} from './pensionBases.js';
 export {
   getTaxYearConfig,

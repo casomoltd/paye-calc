@@ -186,20 +186,12 @@ own contributions, so a sacrifice is counted in it once.
 `definedBenefitInput` is the one function that works a defined benefit's
 pension input, so `DB_PENSION_INPUT_MULTIPLIER`, the CPI uplift and the
 floor on each arrangement are applied in one place. The calculator's
-`dbAnnualAccrual` goes through it too, as one arrangement whose pension
+`dbAnnualAccrual` goes through it too, in its own tax year, as one arrangement whose pension
 starts at nil and ends at the accrual, in today's money.
 
-It takes a `PensionInputPeriod`: each arrangement's pension and lump sum
-at the start and the end of the period, as the caller values them, with
-the CPI that uplifts the opening values. The library knows no scheme's
-rules: which of a member's rights make up one arrangement, and what each
-is worth, are the caller's.
+It takes a `PensionInputPeriod`: its tax year, each arrangement's pension and lump sum at the start and the end of the period, as the caller values them, and the CPI that uplifts the opening values. The library knows no scheme's rules: which of a member's rights make up one arrangement, and what each is worth, are the caller's.
 
-A caller reading periods year by year names each by a
-[`TaxYearEnd`](#tax-year-ends). The first tax year that is itself a pension
-input period is 2016-17, `FIRST_TAX_YEAR_PENSION_INPUT_PERIOD` (Finance Act
-2004 s.238ZA(3)), and `refuseBeforePensionInputPeriods` refuses a year
-before it.
+A period names its tax year by a [`TaxYearEnd`](#tax-year-ends), and `definedBenefitInput` refuses one before 2016-17, `FIRST_TAX_YEAR_PENSION_INPUT_PERIOD`: the tax years are pension input periods only from then (Finance Act 2004 s.238ZA(3)), and an earlier period ran on rules not modelled here. An arrangement begun on or after 9 July 2015 has a first period from its own start to the next 5 April (s.238ZB(1)). `refuseBeforePensionInputPeriods` is the same refusal, for a caller that reads its periods itself.
 
 ## Gross pension income for a net target
 

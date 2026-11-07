@@ -4,9 +4,9 @@
  * UK-wide figures, the same for every parent, which is why they sit here
  * beside the tax years. The limit is tested on adjusted net income, the
  * measure the personal allowance taper reads, but it is a separate rule:
- * the support stops outright above it, with no taper. Other childcare
- * schemes (England's free hours among them) rest on instruments of their
- * own, not read here.
+ * the support stops outright above it, with no taper. England's free
+ * hours for working parents rest on regulations of their own, read in
+ * `freeChildcareEngland.ts`.
  */
 import type {TaxYear, YearLabel} from './types.js';
 import {TAX_YEARS} from './types.js';
@@ -23,14 +23,22 @@ export interface TaxFreeChildcare {
   readonly incomeLimit: number;
   /**
    * The most the government adds for a child in a year, a cap rather than
-   * what every parent gets: "£500 every 3 months (up to £2,000 a year)"
-   * (https://www.gov.uk/tax-free-childcare, read 6 Nov 2026). The yearly
-   * figure is gov.uk's; the Act's per-period caps have not been read
-   * through to it.
+   * what every parent gets. The Childcare Payments Act 2014 sets it per
+   * entitlement period: the top-up is "25% of the amount of the qualifying
+   * payment" (s.1(4)), the qualifying payments in a period "must not exceed
+   * the relevant maximum" (s.19(4)), which is "in the case of any other
+   * child, £2,000" (s.19(5)(b)), and "The length of an entitlement period
+   * is 3 months" (s.5(1)). So £500 a period, and £2,000 over the four
+   * periods of a year
+   * (https://www.legislation.gov.uk/ukpga/2014/28/section/19, read 7 Nov
+   * 2026). gov.uk states the same: "£500 every 3 months (up to £2,000 a
+   * year)" (https://www.gov.uk/tax-free-childcare, read 6 Nov 2026).
    */
   readonly topUpCapPerChild: number;
-  /** The same cap for a disabled child: "£1,000 every 3 months (up to
-   *  £4,000 a year)", same page and reading. */
+  /** The same cap for a disabled child: the relevant maximum is "in the
+   *  case of a disabled child, £4,000" (s.19(5)(a)), so £1,000 a period
+   *  and £4,000 a year; gov.uk's "£1,000 every 3 months (up to £4,000 a
+   *  year)", same page and reading. */
   readonly topUpCapPerDisabledChild: number;
 }
 
