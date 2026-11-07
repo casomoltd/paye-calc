@@ -1,6 +1,6 @@
 {
   "name": "@casomoltd/paye-calc",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "UK PAYE take-home pay calculator — income tax, NI, pensions, student loans",
   "homepage": "https://casomo.co.uk",
   "bugs": "https://github.com/casomoltd/paye-calc/issues",
