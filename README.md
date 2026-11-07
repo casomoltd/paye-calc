@@ -78,6 +78,9 @@ caller that needs one figure without a calculator
   `statePensionYearly(weekly)` for a forecast's weekly figure. The full
   rate only; what a person is due depends on their National Insurance
   record.
+- **Tax-Free Childcare** — `taxFreeChildcare(year)`: the adjusted net
+  income limit above which a parent loses it outright, and the yearly
+  top-up caps per child and per disabled child.
 - **Minimum pension age** — `minimumPensionAge(on)`: the normal minimum
   pension age on a drawing date, 55 until 5 April 2028 and 57 from 6 April
   2028, as the Finance Act 2004 sets it for any scheme outside the
@@ -93,6 +96,16 @@ caller that needs one figure without a calculator
   each floored at nought on its own
   ([PTM053301](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm053301),
   [the reasoning](docs/how-it-works.md#a-defined-benefit-input-is-worked-in-one-place)).
+- **Tax year ends** — `TaxYearEnd` names any tax year, published or not,
+  by the calendar year it ends in; `taxYearEndFor(date)` turns a date into
+  one, `taxYearStartDate(end)` and `taxYearEndDate(end)` give its opening 6
+  April and closing 5 April, and `taxYearEndOf(year)` and
+  `taxYearLabel(end)` cross to and from a `TaxYear` label
+  ([why](docs/how-it-works.md#tax-year-ends)).
+- **Pension input periods** — `FIRST_TAX_YEAR_PENSION_INPUT_PERIOD` is
+  2016-17, the first tax year that is a pension input period, and
+  `refuseBeforePensionInputPeriods` refuses a year before it
+  ([why](docs/how-it-works.md#a-defined-benefit-input-is-worked-in-one-place)).
 - **Breakdowns** — `taxBreakdown`, `niBreakdown`, and
   `studentLoanBreakdown` for detailed output. Each tax row carries a
   `kind`: the allowance, a K code's added pay

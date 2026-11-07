@@ -5,7 +5,10 @@ import {
   calculateTaperedAnnualAllowance,
   calculateThresholdIncome,
   calculateAdjustedIncome,
+  FIRST_TAX_YEAR_PENSION_INPUT_PERIOD,
+  refuseBeforePensionInputPeriods,
 } from '../src/annualAllowance';
+import {taxYearEnd, taxYearLabel} from '../src/taxYearEnd';
 import type {TaxYearConfig} from '../src/TaxYearConfig';
 import {getTaxYearConfig} from '../src/taxYears';
 
@@ -34,7 +37,7 @@ describe('AA taper — HMRC PTM057200 oracle', () => {
   it('AI £160,000 → £35,000', () => {
     expect(
       calculateTaperedAnnualAllowance(
-        160000, 130000, historical,
+        {adjustedIncome: 160000, thresholdIncome: 130000}, historical,
       ),
     ).toBe(35000);
   });
@@ -42,7 +45,7 @@ describe('AA taper — HMRC PTM057200 oracle', () => {
   it('AI £215,000 → £10,000 (floored)', () => {
     expect(
       calculateTaperedAnnualAllowance(
-        215000, 130000, historical,
+        {adjustedIncome: 215000, thresholdIncome: 130000}, historical,
       ),
     ).toBe(10000);
   });
@@ -50,7 +53,7 @@ describe('AA taper — HMRC PTM057200 oracle', () => {
   it('AI £177,979 → £26,011 (rounds down)', () => {
     expect(
       calculateTaperedAnnualAllowance(
-        177979, 130000, historical,
+        {adjustedIncome: 177979, thresholdIncome: 130000}, historical,
       ),
     ).toBe(26011);
   });
@@ -68,7 +71,7 @@ describe('AA taper — HMRC PTM057200 oracle', () => {
     expect(adjusted).toBe(178500);
     expect(
       calculateTaperedAnnualAllowance(
-        adjusted, threshold, historical,
+        {adjustedIncome: adjusted, thresholdIncome: threshold}, historical,
       ),
     ).toBe(25750);
   });
@@ -83,25 +86,33 @@ describe('AA taper — current limits (2025-26)', () => {
 
   it('full allowance below adjusted-income limit', () => {
     expect(
-      calculateTaperedAnnualAllowance(250000, 210000, cfg),
+      calculateTaperedAnnualAllowance(
+        {adjustedIncome: 250000, thresholdIncome: 210000}, cfg,
+      ),
     ).toBe(60000);
   });
 
   it('threshold-income gate blocks the taper', () => {
     expect(
-      calculateTaperedAnnualAllowance(400000, 200000, cfg),
+      calculateTaperedAnnualAllowance(
+        {adjustedIncome: 400000, thresholdIncome: 200000}, cfg,
+      ),
     ).toBe(60000);
   });
 
   it('tapers £1 per £2 over £260,000', () => {
     expect(
-      calculateTaperedAnnualAllowance(300000, 210000, cfg),
+      calculateTaperedAnnualAllowance(
+        {adjustedIncome: 300000, thresholdIncome: 210000}, cfg,
+      ),
     ).toBe(40000);
   });
 
   it('floors at £10,000', () => {
     expect(
-      calculateTaperedAnnualAllowance(360000, 210000, cfg),
+      calculateTaperedAnnualAllowance(
+        {adjustedIncome: 360000, thresholdIncome: 210000}, cfg,
+      ),
     ).toBe(10000);
   });
 });
@@ -130,5 +141,19 @@ describe('annualAllowance: the employer element', () => {
       expect(employerElement).toBeLessThanOrEqual(
         allowance.pensionInput + extras.employerContribution);
     }
+  });
+});
+
+describe('the pension input periods', () => {
+  it('begin with 2016-17', () => {
+    // Finance Act 2004 s.238ZA(3): "the tax year 2016-17 and each
+    // subsequent tax year"
+    // (https://www.legislation.gov.uk/ukpga/2004/12/section/238ZA).
+    expect(taxYearLabel(FIRST_TAX_YEAR_PENSION_INPUT_PERIOD)).toBe('2016-17');
+    expect(() => refuseBeforePensionInputPeriods('asked', taxYearEnd(2017)))
+      .not.toThrow();
+    expect(() => refuseBeforePensionInputPeriods('asked', taxYearEnd(2016)))
+      .toThrow('asked: 2015-16 is before the first tax year that is a '
+        + 'pension input period, 2016-17');
   });
 });

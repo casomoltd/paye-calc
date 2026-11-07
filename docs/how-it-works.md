@@ -37,14 +37,30 @@ published Agenda for Change scale is a year behind the tax year in
 force — and a single value used for both silently misprices every
 deduction on the page.
 
-This package publishes no pay scales. It names both types because it
-owns the year vocabulary, and because one of them alone means nothing.
+This package publishes no pay scales. It names both `TaxYear` and
+`PayYear` because it owns the year vocabulary, and because one of them
+alone means nothing.
+
+### Tax year ends
+
+**`TaxYearEnd`** names a tax year by the calendar year it ends in: 2027
+is 2026-27. `TaxYear` names only the years whose rates are published,
+and a pension input is read year by year to a leaving date years ahead,
+so a projected year needs a name that `TaxYear` cannot give.
+
+Its brand is required on the type itself, so a bare number does not
+assign to it, unlike `TaxYear`'s brand, which is
+[optional on the type](#the-brand-is-optional-on-the-type-and-required-at-the-mint).
+A scheme year ending 31 March is also a plain number, five days off a tax
+year ending 5 April, and a type that took any number would take one for
+the other. `taxYearEnd()` mints one
+from a number, and `taxYearEndFor()` from a date.
 
 ### The brand is optional on the type and required at the mint
 
-Both types are `YearLabel` plus a phantom brand, so a bare literal or a
-freshly parsed label still assigns to either. That is deliberate: a
-parse boundary needs no ceremony. What the brand stops is a value that
+`TaxYear` and `PayYear` are both `YearLabel` plus a phantom brand, so a
+bare literal or a freshly parsed label still assigns to either. That is
+deliberate: a parse boundary needs no ceremony. What the brand stops is a value that
 has *already* been established as one kind of year being used as the
 other.
 
@@ -178,6 +194,12 @@ at the start and the end of the period, as the caller values them, with
 the CPI that uplifts the opening values. The library knows no scheme's
 rules: which of a member's rights make up one arrangement, and what each
 is worth, are the caller's.
+
+A caller reading periods year by year names each by a
+[`TaxYearEnd`](#tax-year-ends). The first tax year that is itself a pension
+input period is 2016-17, `FIRST_TAX_YEAR_PENSION_INPUT_PERIOD` (Finance Act
+2004 s.238ZA(3)), and `refuseBeforePensionInputPeriods` refuses a year
+before it.
 
 ## Gross pension income for a net target
 

@@ -38,7 +38,8 @@ describe('regression: annual allowance taper', () => {
   it.each(TAPER)('$case', (tc: TaperCase) => {
     const {adjusted, threshold} = incomesOf(tc.given);
     const allowance = calculateTaperedAnnualAllowance(
-      adjusted, threshold, getTaxYearConfig(taxYear(tc.year), 'rUK'),
+      {adjustedIncome: adjusted, thresholdIncome: threshold},
+      getTaxYearConfig(taxYear(tc.year), 'rUK'),
     );
     const got = 'adjusted' in tc.given
       ? {allowance} : {threshold, adjusted, allowance};

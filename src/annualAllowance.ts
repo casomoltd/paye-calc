@@ -4,6 +4,10 @@
  * allowance left and any excess. None of it changes take-home pay, so
  * it is worked apart from it, from a saving the take-home calculation
  * describes.
+ *
+ * Its other half is the pension input period: a defined benefit's input
+ * across its arrangements, worked from each one's opening and closing
+ * values, and the first tax year that is a period.
  */
 
 import {DB_PENSION_INPUT_MULTIPLIER} from './types.js';
@@ -12,6 +16,8 @@ import {assertPayAmount, uplift} from './money.js';
 import {INCOME_PER_POUND_WITHDRAWN} from './TaxYearConfig.js';
 import type {TaxYearConfig} from './TaxYearConfig.js';
 import type {PayFigures} from './pay.js';
+import {taxYearEnd, taxYearLabel} from './taxYearEnd.js';
+import type {TaxYearEnd} from './taxYearEnd.js';
 
 /** The pay a year's allowance tests start from: the take-home
  *  calculation's own figures. */
@@ -43,10 +49,14 @@ export interface AllowanceExtras {
   readonly mpaaTriggered?: boolean;
 }
 
-/** The allowance a year's saving meets. */
-export interface AnnualAllowance {
+/** The two incomes the taper reads, named so they cannot be swapped. */
+export interface TaperIncomes {
   readonly thresholdIncome: number;
   readonly adjustedIncome: number;
+}
+
+/** The allowance a year's saving meets. */
+export interface AnnualAllowance extends TaperIncomes {
   /** The allowance after the taper, or the MPAA where it applies. */
   readonly available: number;
   readonly pensionInput: number;
@@ -158,6 +168,19 @@ export interface PensionInputPeriod {
   readonly cpi: number;
 }
 
+/** 2016-17, by the year it ends in. */
+const FIRST_PERIOD_YEAR_END = 2017;
+
+/**
+ * The first tax year that is itself a pension input period, 2016-17
+ * (s.238ZA(3), cited at {@link PensionInputPeriod}). An arrangement begun
+ * after 9 July 2015 has a first period running from its start, which the
+ * caller reads; a tax year before 2016-17 is never a period, and
+ * {@link refuseBeforePensionInputPeriods} refuses one.
+ */
+export const FIRST_TAX_YEAR_PENSION_INPUT_PERIOD: TaxYearEnd =
+  taxYearEnd(FIRST_PERIOD_YEAR_END);
+
 /** Every value an arrangement carries, each checked before it is used. */
 const ARRANGEMENT_VALUE_KEYS = [
   'pensionOpening', 'pensionClosing', 'lumpSumOpening', 'lumpSumClosing',
@@ -185,7 +208,7 @@ export function annualAllowance(
   const adjustedIncome = calculateAdjustedIncome(incomes);
   const available = extras.mpaaTriggered === true
     ? config.annualAllowance.moneyPurchase
-    : calculateTaperedAnnualAllowance(adjustedIncome, thresholdIncome, config);
+    : calculateTaperedAnnualAllowance({adjustedIncome, thresholdIncome}, config);
   const input = pensionInput(saving);
   return {
     thresholdIncome,
@@ -235,6 +258,21 @@ export function definedBenefitInput(
   arrangements.forEach(assertBenefitValues);
   return arrangements.reduce(
     (sum, arrangement) => sum + arrangementInput(arrangement, cpi), 0);
+}
+
+/** Throws RangeError for a tax year before
+ *  {@link FIRST_TAX_YEAR_PENSION_INPUT_PERIOD}, naming `asked`, the call a
+ *  caller was answering. */
+export function refuseBeforePensionInputPeriods(
+  asked: string, end: TaxYearEnd,
+): void {
+  if (end < FIRST_TAX_YEAR_PENSION_INPUT_PERIOD) {
+    throw new RangeError(
+      `${asked}: ${taxYearLabel(end)} is before the first tax year that is `
+        + `a pension input period, `
+        + taxYearLabel(FIRST_TAX_YEAR_PENSION_INPUT_PERIOD),
+    );
+  }
 }
 
 /**
@@ -290,8 +328,7 @@ export function calculateAdjustedIncome(
  * Source: gov.uk taper guidance; HMRC PTM057100/PTM057200.
  */
 export function calculateTaperedAnnualAllowance(
-  adjustedIncome: number,
-  thresholdIncome: number,
+  {adjustedIncome, thresholdIncome}: TaperIncomes,
   config: TaxYearConfig,
 ): number {
   const aa = config.annualAllowance;
