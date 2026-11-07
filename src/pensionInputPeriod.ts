@@ -9,6 +9,7 @@ import {DB_PENSION_INPUT_MULTIPLIER} from './types.js';
 import {assertPayAmount, uplift} from './money.js';
 import {taxYearEnd, taxYearLabel} from './taxYearEnd.js';
 import type {TaxYearEnd} from './taxYearEnd.js';
+import type * as thisModule from './pensionInputPeriod.js';
 
 /**
  * One arrangement's defined benefits at the start and the end of a
@@ -70,8 +71,10 @@ const FIRST_PERIOD_YEAR_END = 2017;
 export const FIRST_TAX_YEAR_PENSION_INPUT_PERIOD: TaxYearEnd =
   taxYearEnd(FIRST_PERIOD_YEAR_END);
 
-/** The call `definedBenefitInput`'s refusal names. */
-const ASKED = 'definedBenefitInput';
+/** The call `definedBenefitInput`'s refusal names, checked against this
+ *  module's own exports, so a rename cannot leave a refusal naming a call
+ *  that is gone. */
+const ASKED = 'definedBenefitInput' satisfies keyof typeof thisModule;
 
 /** Every value an arrangement carries, each checked before it is used. */
 const ARRANGEMENT_VALUE_KEYS = [
@@ -125,7 +128,8 @@ export function definedBenefitInput(
 
 /** Throws RangeError for a tax year before
  *  {@link FIRST_TAX_YEAR_PENSION_INPUT_PERIOD}, naming `asked`, the call a
- *  caller was answering. */
+ *  caller was answering. A plain string, as this library cannot know a
+ *  caller's calls. */
 export function refuseBeforePensionInputPeriods(
   asked: string, end: TaxYearEnd,
 ): void {

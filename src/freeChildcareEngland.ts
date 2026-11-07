@@ -8,6 +8,7 @@
  * a figure matches. It covers England only; the
  * other nations' schemes are not read here.
  */
+import {figuresFor} from './perYear.js';
 import type {TaxYear, YearLabel} from './types.js';
 import {TAX_YEARS} from './types.js';
 
@@ -39,11 +40,6 @@ const FREE_CHILDCARE_ENGLAND:
  * lending another year's.
  */
 export function freeChildcareEngland(year: TaxYear): FreeChildcareEngland {
-  const key: YearLabel = year;
-  const figures = FREE_CHILDCARE_ENGLAND[key];
-  if (figures === undefined) {
-    throw new RangeError(
-      `no figures for England's free childcare for working parents for ${year}`);
-  }
-  return figures;
+  return figuresFor(FREE_CHILDCARE_ENGLAND, year,
+    "figures for England's free childcare for working parents");
 }

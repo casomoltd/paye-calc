@@ -7,6 +7,7 @@
  * National Insurance record, which is theirs to state, not this
  * library's to assume.
  */
+import {figuresFor} from './perYear.js';
 import {Period, PERIODS_PER_YEAR, TAX_YEARS} from './types.js';
 import type {TaxYear, YearLabel} from './types.js';
 
@@ -47,10 +48,7 @@ export function statePensionYearly(weekly: number): number {
 export function fullNewStatePension(
   year: TaxYear,
 ): {weekly: number; yearly: number} {
-  const key: YearLabel = year;
-  const weekly = WEEKLY_FULL_RATE[key];
-  if (weekly === undefined) {
-    throw new RangeError(`no full new State Pension rate for ${year}`);
-  }
+  const weekly =
+    figuresFor(WEEKLY_FULL_RATE, year, 'full new State Pension rate');
   return {weekly, yearly: statePensionYearly(weekly)};
 }

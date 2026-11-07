@@ -8,6 +8,7 @@
  * hours for working parents rest on regulations of their own, read in
  * `freeChildcareEngland.ts`.
  */
+import {figuresFor} from './perYear.js';
 import type {TaxYear, YearLabel} from './types.js';
 import {TAX_YEARS} from './types.js';
 
@@ -56,10 +57,5 @@ const TAX_FREE_CHILDCARE: Partial<Record<YearLabel, TaxFreeChildcare>> = {
  * this library holds none for, rather than lending another year's.
  */
 export function taxFreeChildcare(year: TaxYear): TaxFreeChildcare {
-  const key: YearLabel = year;
-  const figures = TAX_FREE_CHILDCARE[key];
-  if (figures === undefined) {
-    throw new RangeError(`no Tax-Free Childcare figures for ${year}`);
-  }
-  return figures;
+  return figuresFor(TAX_FREE_CHILDCARE, year, 'Tax-Free Childcare figures');
 }
