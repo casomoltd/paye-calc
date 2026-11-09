@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       # write: the release step below attaches the packed tarball. Temporary,
-      # while npm publishing is paused (revert with the step below).
+      # while npm publishing is paused (#31).
       contents: write
       id-token: write # OIDC — trusted publishing, no stored token
 
@@ -45,8 +45,9 @@ jobs:
 
       # Temporary: the npm account is on hold, so a version tag releases the
       # packed tarball on GitHub instead of publishing to npm, and consumers
-      # install it from the release URL. Revert this commit once npm accepts
-      # publishes again, then publish each version released this way.
+      # install it from the release URL. Revert once npm accepts publishes
+      # again, and publish each version released this way:
+      # https://github.com/casomoltd/paye-calc/issues/31
       - name: Pack
         run: npm pack
 
