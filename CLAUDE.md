@@ -18,7 +18,7 @@ UK PAYE take-home pay calculator library.
 - `src/TakeHomePay.ts` — the calculator: a façade that records inputs and reads `pay.ts`
 - `src/pay.ts` — take-home pay as a pure function of a gross and its inputs, and the net-to-gross search
 - `src/incomeTax.ts` — income tax rows for taxable pay and a code
-- `src/grossFor.ts` — gross pension income for a net target, income tax alone
+- `src/grossFor.ts` — pension income after income tax alone, both ways (`grossFor`, `netFor`), and an untaxed sum as taxable income (`grossEquivalent`)
 - `src/statePension.ts` — the full new State Pension rate, per tax year, each figure cited at its source
 - `src/taxFreeChildcare.ts` — Tax-Free Childcare's income limit and top-up caps, per tax year, each figure cited at its source
 - `src/freeChildcareEngland.ts` — the income limit on England's free childcare for working parents, per tax year, cited to its own regulations

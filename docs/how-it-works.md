@@ -84,13 +84,19 @@ It takes a `PensionInputPeriod`: its tax year, each arrangement's pension and lu
 
 A period names its tax year by a [`TaxYearEnd`](#tax-year-ends), and `definedBenefitInput` refuses one before 2016-17, `FIRST_TAX_YEAR_PENSION_INPUT_PERIOD`: the tax years are pension input periods only from then (Finance Act 2004 s.238ZA(3)), and an earlier period ran on rules not modelled here. An arrangement begun on or after 9 July 2015 has a first period from its own start to the next 5 April (s.238ZB(1)). `refuseBeforePensionInputPeriods` is the same refusal, for a caller that reads its periods itself.
 
-## Gross pension income for a net target
+## Pension income, gross and net
 
 `grossFor` answers a pensioner's question: what gross income leaves a given amount once income tax is taken? Income tax is the only deduction on a pension in payment, so it is not `TakeHomePay`'s `NetAnnual` inverse, which inverts an earner's whole take-home pay.
 
-**It is exact, and defined in pence.** The answer is the smallest gross, to the penny, whose net reaches the target. Income tax is linear in gross between the points where the marginal rate changes — the Personal Allowance, each band edge, and the two ends of the allowance taper — so the inverse is found on the piece that contains the target and then settled to the penny against this library's own tax figure, because the taper withdraws the allowance in whole pounds and tax is rounded to pence.
+**`grossFor` is exact, and defined in pence.** Its answer is the smallest gross, to the penny, whose net reaches the target. Income tax is linear in gross between the points where the marginal rate changes — the Personal Allowance, each band edge, and the two ends of the allowance taper — so the inverse is found on the piece that contains the target and then settled to the penny against this library's own tax figure, because the taper withdraws the allowance in whole pounds and tax is rounded to pence.
 
 **The taper is included.** Between its start and the income at which the allowance is gone, each extra pound of gross loses fifty pence of allowance, so the marginal rate is 60% at the higher rate rather than 40%. A two-band inverse is exact below the taper and asks for too little gross above its start; the tests pin a figure worked by hand there.
+
+**`netFor` is the forward direction**: what a gross pension income leaves once income tax is taken. It charges tax exactly as `grossFor` does, so a caller comparing incomes after tax, such as a gap that tax-free savings fill, reads both directions from one figure.
+
+**`grossEquivalent` composes the two**: what an untaxed sum is worth as more taxable income. £5,000 of savings spent beside a £30,000 pension adds £5,000 after tax; `grossEquivalent(30_000, 5_000, …)` is the extra pension that, taxed with the £30,000, would add the same, so more than £5,000. It is how savings spent beside a pension count against a target set before tax.
+
+All three throw a `RangeError` for an amount that is negative or not a finite number.
 
 ## The minimum pension age
 

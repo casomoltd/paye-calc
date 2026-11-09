@@ -1,5 +1,8 @@
 /**
- * The gross pension income that leaves a target after income tax.
+ * The gross pension income that leaves a target after income tax, the
+ * income a gross pension leaves, and an untaxed sum restated as taxable
+ * gross: all charged by one tax figure, so a caller comparing incomes
+ * after tax reads each from here.
  *
  * This is not `TakeHomePay`'s inverse. That one inverts the whole of an
  * earner's take-home pay — pension contributions, National Insurance,
@@ -26,6 +29,11 @@ const WIDEN_BY = 2;
  *  bands, rounded to the penny. */
 function incomeTaxOn(gross: number, config: TaxYearConfig): number {
   return taxOf(incomeTaxRows(gross, config, null));
+}
+
+/** What a gross income leaves after that tax, to the penny. */
+function netOn(gross: number, config: TaxYearConfig): number {
+  return roundPence(gross - incomeTaxOn(gross, config));
 }
 
 /**
@@ -65,6 +73,48 @@ function breakpoints(config: TaxYearConfig): number[] {
 }
 
 /**
+ * What a gross pension income leaves after income tax for `year` and
+ * `region`, in pounds to the penny: the forward direction of `grossFor`,
+ * charged as `grossFor` charges it, so `netFor(grossFor(x)) >= x`.
+ *
+ * Income tax is the only deduction, as on a pension in payment, and the
+ * personal allowance taper is included.
+ *
+ * Throws RangeError for a gross that is negative or not a finite number.
+ */
+export function netFor(
+  gross: number,
+  year: TaxYear,
+  region: TaxRegion,
+): number {
+  assertPayAmount(gross, 'Gross income');
+  return netOn(gross, getTaxYearConfig(year, region));
+}
+
+/**
+ * The extra taxable income an `untaxed` sum is worth beside `taxable`
+ * income, in pounds to the penny: the gross that, taxed with `taxable` for
+ * `year` and `region`, would leave the same as the untaxed sum does.
+ * Savings spent beside a pension are the case: set against a target before
+ * tax, they count as this much income.
+ *
+ * Nought where `untaxed` is nought. Throws RangeError for an amount that
+ * is negative or not a finite number.
+ */
+export function grossEquivalent(
+  taxable: number,
+  untaxed: number,
+  year: TaxYear,
+  region: TaxRegion,
+): number {
+  assertPayAmount(taxable, 'Taxable income');
+  assertPayAmount(untaxed, 'Untaxed sum');
+  if (untaxed === 0) return 0;
+  return roundPence(
+    grossFor(netFor(taxable, year, region) + untaxed, year, region) - taxable);
+}
+
+/**
  * The smallest gross pension income, in pounds to the penny, whose
  * income tax for `year` and `region` leaves at least `targetNet`.
  *
@@ -76,6 +126,10 @@ function breakpoints(config: TaxYearConfig): number[] {
  * Found on the linear piece that contains the target, then settled to
  * the penny against this library's own tax figure, because the taper
  * withdraws the allowance in whole pounds and tax is rounded to pence.
+ * Inside the taper that whole-pound withdrawal makes net dip a few pence
+ * at each £2 step, so the answer is the smallest on its piece, which can
+ * be pennies above a gross on a neighbouring step that also reaches the
+ * target.
  *
  * Throws RangeError for a target that is negative or not a finite
  * number.
@@ -88,7 +142,7 @@ export function grossFor(
   assertPayAmount(targetNet, 'Target net income');
   if (targetNet === 0) return 0;
   const config = getTaxYearConfig(year, region);
-  const net = (gross: number) => roundPence(gross - incomeTaxOn(gross, config));
+  const net = (gross: number) => netOn(gross, config);
 
   const points = breakpoints(config);
   let high = points[points.length - 1];

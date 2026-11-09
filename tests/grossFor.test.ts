@@ -12,7 +12,7 @@
  */
 import {freePayOfAllowance} from '../src/freePay';
 import {describe, expect, it} from 'vitest';
-import {grossFor} from '../src/grossFor.js';
+import {grossEquivalent, grossFor, netFor} from '../src/grossFor.js';
 import {TakeHomePay} from '../src/TakeHomePay.js';
 import {availableTaxYears, getTaxYearConfig} from '../src/taxYears/index.js';
 import {GrossAnnual, TAX_REGIONS, taxYear} from '../src/types.js';
@@ -100,5 +100,74 @@ describe('grossFor, against the two-band closed form', () => {
     // once tax is rounded to the penny (38,570.664 → £38,570.66); a penny
     // less leaves £79,999.99.
     expect(grossFor(80_000, year, 'rUK')).toBeCloseTo(118_570.66, 9);
+  });
+});
+
+describe('netFor, the forward direction', () => {
+  for (const year of availableTaxYears) {
+    for (const region of Object.values(TAX_REGIONS)) {
+      it(`${year} ${region}: agrees with the take-home figure, and inverts grossFor`,
+        () => {
+          for (const target of TARGETS) {
+            expect(netFor(target, year, region), `${target}`)
+              .toBe(net(target, year, region));
+            const gross = grossFor(target, year, region);
+            expect(netFor(gross, year, region), `${target}`)
+              .toBeGreaterThanOrEqual(target);
+            const pennyLess = Math.round(gross * 100 - 1) / 100;
+            expect(netFor(pennyLess, year, region), `${target}`)
+              .toBeLessThan(target);
+          }
+        });
+    }
+  }
+
+  it('is nothing for nothing, and refuses a gross that is not a number or negative',
+    () => {
+      expect(netFor(0, taxYear('2026-27'), 'rUK')).toBe(0);
+      expect(() => netFor(Number.NaN, taxYear('2026-27'), 'rUK'))
+        .toThrow(RangeError);
+      expect(() => netFor(-1, taxYear('2026-27'), 'rUK'))
+        .toThrow(RangeError);
+    });
+});
+
+describe('netFor, against a figure worked by hand', () => {
+  it('leaves £80,000 from £118,570.66, the gross worked by hand above', () => {
+    expect(netFor(118_570.66, taxYear('2026-27'), 'rUK')).toBe(80_000);
+  });
+});
+
+describe('grossEquivalent: an untaxed sum as more taxable income', () => {
+  const year = taxYear('2026-27');
+
+  it('leaves, taxed with the income, what the untaxed sum adds', () => {
+    for (const taxable of [10_000, 30_000, 60_000, 105_000]) {
+      for (const untaxed of [1_000, 5_000, 20_000]) {
+        const extra = grossEquivalent(taxable, untaxed, year, 'rUK');
+        expect(netFor(taxable + extra, year, 'rUK'), `${taxable} ${untaxed}`)
+          .toBeCloseTo(netFor(taxable, year, 'rUK') + untaxed, 1);
+        expect(extra).toBeGreaterThanOrEqual(untaxed);
+      }
+    }
+  });
+
+  it('is £6,250 for £5,000 beside £30,000, worked by hand', () => {
+    // £30,000 and £36,250 both sit inside the 2026-27 basic rate band, which
+    // runs to £50,279 of gross (£12,579 free pay plus £37,700), so each extra
+    // pound of gross keeps 80p and £5,000 after tax is £5,000 / 0.8 of gross.
+    expect(grossEquivalent(30_000, 5_000, year, 'rUK')).toBe(6_250);
+  });
+
+  it('is the sum itself below the allowance, and nothing for nothing', () => {
+    expect(grossEquivalent(0, 5_000, year, 'rUK')).toBeCloseTo(5_000, 2);
+    expect(grossEquivalent(40_000, 0, year, 'rUK')).toBe(0);
+    expect(() => grossEquivalent(40_000, -1, year, 'rUK')).toThrow(RangeError);
+    expect(() => grossEquivalent(Number.NaN, 0, year, 'rUK')).toThrow(RangeError);
+  });
+
+  it('is in pounds to the penny', () => {
+    const extra = grossEquivalent(30_000, 1_234.56, year, 'rUK');
+    expect(Math.round(extra * 100) / 100).toBe(extra);
   });
 });
