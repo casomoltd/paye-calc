@@ -36,7 +36,10 @@ export {
   taxBandByName,
   higherRateBand,
   higherRateThreshold,
+  taperPosition,
+  taxBandsSpanned,
 } from './TaxYearConfig.js';
+export type {TaperPosition} from './TaxYearConfig.js';
 export {basicRateBand} from './flatRate.js';
 export {
   annualAllowance,

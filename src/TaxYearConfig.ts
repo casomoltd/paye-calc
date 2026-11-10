@@ -281,3 +281,53 @@ export function allowanceLeft(
   return config.personalAllowance
     - Math.floor(excessIncome / INCOME_PER_POUND_WITHDRAWN);
 }
+
+/**
+ * Where a gross salary range sits against the personal allowance taper:
+ * wholly before its start, entering it, wholly inside it, leaving it, or
+ * wholly past the income at which the allowance is gone. The taper is
+ * UK-wide but salaries differ by nation, so where a pay band sits is a
+ * question of its own figures.
+ */
+export type TaperPosition =
+  | 'below' | 'entering' | 'inside' | 'leaving' | 'above';
+
+export function taperPosition(
+  config: TaxYearConfig,
+  minGross: number,
+  maxGross: number,
+): TaperPosition {
+  const start = config.personalAllowanceTaperStart;
+  const end = personalAllowanceTaperEnd(config);
+  if (maxGross <= start) return 'below';
+  if (minGross >= end) return 'above';
+  if (minGross >= start && maxGross <= end) return 'inside';
+  return minGross < start ? 'entering' : 'leaving';
+}
+
+/** Taxable income on a gross, after the allowance the taper leaves. */
+function taxableOnGross(config: TaxYearConfig, gross: number): number {
+  return gross - calculateTaperedPersonalAllowance(gross, config);
+}
+
+/**
+ * The income tax bands a gross salary range falls in, in order. Each gross
+ * is reduced by the allowance the taper leaves it, not the statutory one,
+ * so a range above the taper's start lands in the band it is charged at:
+ * the additional rate starts at the taper's end (£125,140), not at the
+ * statutory allowance plus the band's lower bound. Taxable income rises
+ * with gross throughout, so the range's two ends bound every band it
+ * touches.
+ */
+export function taxBandsSpanned(
+  config: TaxYearConfig,
+  minGross: number,
+  maxGross: number,
+): TaxBand[] {
+  const low = taxableOnGross(config, minGross);
+  const high = taxableOnGross(config, maxGross);
+  return config.incomeTaxBands.filter(
+    (b) => high > b.min && low < b.max,
+  );
+}
+

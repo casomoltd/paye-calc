@@ -84,6 +84,14 @@ It takes a `PensionInputPeriod`: its tax year, each arrangement's pension and lu
 
 A period names its tax year by a [`TaxYearEnd`](#tax-year-ends), and `definedBenefitInput` refuses one before 2016-17, `FIRST_TAX_YEAR_PENSION_INPUT_PERIOD`: the tax years are pension input periods only from then (Finance Act 2004 s.238ZA(3)), and an earlier period ran on rules not modelled here. An arrangement begun on or after 9 July 2015 has a first period from its own start to the next 5 April (s.238ZB(1)). `refuseBeforePensionInputPeriods` is the same refusal, for a caller that reads its periods itself.
 
+## Where a salary range sits
+
+`taxBandsSpanned` and `taperPosition` answer where a gross salary range sits against the income tax bands and the personal allowance taper, for a consumer describing a pay band rather than a single salary.
+
+**The bands are read on taxable income, after the taper.** Each end of the range is reduced by the allowance the taper leaves it, not the statutory allowance, so a range above the taper's start lands in the band it is charged at. The additional rate therefore begins at £125,140 gross, the taper's end, rather than at the statutory allowance plus the band's lower bound. Taxable income rises with gross throughout, so the range's two ends bound every band between them.
+
+**The taper's position is read on gross.** The taper is defined on gross income, from `personalAllowanceTaperStart` to the income at which the allowance is gone, so `taperPosition` compares the range with those two figures directly.
+
 ## Pension income, gross and net
 
 `grossFor` answers a pensioner's question: what gross income leaves a given amount once income tax is taken? Income tax is the only deduction on a pension in payment, so it is not `TakeHomePay`'s `NetAnnual` inverse, which inverts an earner's whole take-home pay.
