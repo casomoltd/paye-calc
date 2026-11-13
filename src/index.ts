@@ -39,10 +39,12 @@ export {
 } from './TaxYearConfig.js';
 export {basicRateBand} from './flatRate.js';
 export {
+  allowanceExceeded,
   annualAllowance,
   calculateTaperedAnnualAllowance,
   calculateThresholdIncome,
   calculateAdjustedIncome,
+  totalPensionInput,
 } from './annualAllowance.js';
 export {
   definedBenefitInput,
@@ -56,6 +58,7 @@ export {
 export type {TaxYearEnd} from './taxYearEnd.js';
 export type {
   AllowanceExtras,
+  AllowanceCheck,
   AnnualAllowance,
   TaperIncomes,
   AllowancePay,

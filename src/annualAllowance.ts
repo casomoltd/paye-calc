@@ -10,6 +10,7 @@
 import type {ContributionSplit} from './pensionBases.js';
 import {assertPayAmount} from './money.js';
 import {definedBenefitInput} from './pensionInputPeriod.js';
+import type {PensionInputPeriod} from './pensionInputPeriod.js';
 import {INCOME_PER_POUND_WITHDRAWN} from './TaxYearConfig.js';
 import type {TaxYearConfig} from './TaxYearConfig.js';
 import type {PayFigures} from './pay.js';
@@ -62,6 +63,16 @@ export interface AnnualAllowance extends TaperIncomes {
   readonly pensionInput: number;
   /** Saving above the allowance, which the charge falls on. */
   readonly excess: number;
+}
+
+/** What a period's input is read against, named so the two sums of
+ *  pounds cannot be swapped. */
+export interface AllowanceCheck {
+  /** Paid into money purchase arrangements in the year. */
+  readonly contributions: number;
+  /** The allowance to test against. The caller chooses it, the standard
+   *  one or a tapered one, so no tax year is looked up here. */
+  readonly allowance: number;
 }
 
 /**
@@ -161,8 +172,31 @@ export function annualAllowance(
     adjustedIncome,
     available,
     pensionInput: input,
-    excess: Math.max(0, input - available),
+    excess: excessOver(input, available),
   };
+}
+
+/** A period's total pension input amount (Finance Act 2004 s.229(1),
+ *  https://www.legislation.gov.uk/ukpga/2004/12/section/229): its defined
+ *  benefit input plus `contributions`, paid into money purchase
+ *  arrangements in the year. A sum that is negative or not a number is a
+ *  caller's error and throws RangeError. */
+export function totalPensionInput(
+  period: PensionInputPeriod, contributions: number,
+): number {
+  assertPayAmount(contributions, 'contributions');
+  return definedBenefitInput(period) + contributions;
+}
+
+/** Whether a period's total pension input exceeds the allowance. A total
+ *  at the allowance itself does not: the charge is on "the amount (if any)
+ *  by which" it "exceeds" the allowance (Finance Act 2004 s.227ZA(3),
+ *  https://www.legislation.gov.uk/ukpga/2004/12/section/227ZA). */
+export function allowanceExceeded(
+  period: PensionInputPeriod, {contributions, allowance}: AllowanceCheck,
+): boolean {
+  assertPayAmount(allowance, 'allowance');
+  return excessOver(totalPensionInput(period, contributions), allowance) > 0;
 }
 
 /**
@@ -236,6 +270,18 @@ export function calculateTaperedAnnualAllowance(
   const taperedAllowance = aa.standard - reduction;
 
   return Math.max(aa.taperFloor, taperedAllowance);
+}
+
+/**
+ * The default chargeable amount: Finance Act 2004 s.227ZA(3) makes it "the
+ * amount (if any) by which" the total pension input amount "exceeds" the
+ * annual allowance, and s.227ZA(4) nought "if there is no such excess"
+ * (https://www.legislation.gov.uk/ukpga/2004/12/section/227ZA). The
+ * alternative amount s.227ZA(1) swaps in once money purchase rights are
+ * flexibly accessed is the caller's, through the allowance it passes.
+ */
+function excessOver(input: number, allowance: number): number {
+  return Math.max(0, input - allowance);
 }
 
 /**

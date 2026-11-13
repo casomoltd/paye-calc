@@ -76,6 +76,8 @@ A pension on the personal basis (relief at source) is stated as the gross contri
 
 A relief-at-source contribution and an employer's money purchase payment each count as paid, since each goes to a pot of its own. Net-pay and salary-sacrifice contributions are taken as paid into the defined benefit scheme, so where it accrues a benefit they sit inside its input, worked [in one place](#a-defined-benefit-input-is-worked-in-one-place) as [PTM053301](https://www.gov.uk/hmrc-internal-manuals/pensions-tax-manual/ptm053301) states it. A net-pay AVC alongside that scheme is therefore not counted. The employer's share in adjusted income is that input less the member's own contributions, so a sacrifice is counted in it once.
 
+`totalPensionInput` adds the money purchase contributions paid in a year to a period's defined benefit input. `allowanceExceeded` says whether that total exceeds an allowance the caller passes, the standard one or a tapered one. The charge is on "the amount (if any) by which" the total "exceeds" the allowance (Finance Act 2004 [s.227ZA(3)](https://www.legislation.gov.uk/ukpga/2004/12/section/227ZA)), so a total at the allowance itself does not exceed it. `annualAllowance().excess` and `allowanceExceeded` share that one test.
+
 ### A defined benefit input is worked in one place
 
 `definedBenefitInput` is the one function that works a defined benefit's pension input, so `DB_PENSION_INPUT_MULTIPLIER`, the CPI uplift and the floor on each arrangement are applied in one place. The calculator's `dbAnnualAccrual` goes through it too, in its own tax year, as one arrangement whose pension starts at nil and ends at the accrual, in today's money.
