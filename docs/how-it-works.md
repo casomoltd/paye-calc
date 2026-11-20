@@ -16,7 +16,7 @@ A salary and its deductions answer to two different years, and here they are the
 
 **`PayYear`** is the year whose pay scale a salary was published on. It is the employer's pay round, per nation, and it is not fixed by the calendar at all.
 
-They agree whenever a pay round lands inside its own year, which is why one value carried both for as long as it did. They come apart the moment a round runs late: somebody paid last year's salary this year still pays this year's tax. Northern Ireland is the live case — its latest published Agenda for Change scale is a year behind the tax year in force — and a single value used for both silently misprices every deduction on the page.
+They agree whenever a pay round lands inside its own year, so one value can seem to serve both. They come apart the moment a round runs late: somebody paid last year's salary this year still pays this year's tax. Northern Ireland is the live case — its latest published Agenda for Change scale is a year behind the tax year in force — and a single value used for both silently misprices every deduction on the page.
 
 This package publishes no pay scales. It names both `TaxYear` and `PayYear` because it owns the year vocabulary, and because one of them alone means nothing.
 
@@ -38,7 +38,7 @@ Its brand is required on the type itself, so a bare number does not assign to it
 
 Branding the label type closes that two-step hole completely. It also requires minting at roughly 250 sites, most of them table keys where the basis was never in question — narrowing to `YearLabel` to index a label-keyed table is the same idiom every lookup uses.
 
-That change was built, measured and reverted. It caught no defect the assertions in `tests/year-basis.test.ts` do not catch, and it put ceremony on every lookup in both consuming packages. **So the split is enforced by assertion rather than by the type system alone, and this section is the record of that decision.** If closing the hole is proposed again, the answer is here rather than in a fresh discussion.
+Branding was built and measured: it caught no defect the assertions in `tests/year-basis.test.ts` do not, and it put ceremony on every lookup in both consuming packages. **So the split is enforced by assertion rather than by the type system alone**, and a proposal to brand the label again is answered here.
 
 ### What a consumer owes
 
