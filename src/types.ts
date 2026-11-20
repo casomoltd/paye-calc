@@ -17,17 +17,6 @@ export enum Period {
   Annual = 'annual',
 }
 
-/**
- * How many of each period make a year, as an annual figure is divided into
- * one: 52 weeks, as HMRC's payroll test data and GOV.UK's weekly State
- * Pension count them, a 53rd pay week aside.
- */
-export const PERIODS_PER_YEAR: Readonly<Record<Period, number>> = {
-  [Period.Weekly]: 52,
-  [Period.Monthly]: 12,
-  [Period.Annual]: 1,
-};
-
 /** Pension contribution type */
 export enum PensionType {
   Percent = 'percent',
@@ -52,29 +41,11 @@ export enum StudentLoanPlan {
   Postgraduate = 'postgraduate',
 }
 
-/**
- * Display names for the plans, beside the enum for the same
- * reason NATIONS carries nation labels: consumers rendering a
- * plan should never invent their own wording, and a plan added
- * here fails the Record check in every consumer map. Plan 4 names
- * Scotland because eligibility is Scotland-specific.
- */
-export const STUDENT_LOAN_PLAN_LABELS: Record<
-  StudentLoanPlan,
-  string
-> = {
-  [StudentLoanPlan.Plan1]: 'Plan 1',
-  [StudentLoanPlan.Plan2]: 'Plan 2',
-  [StudentLoanPlan.Plan4]: 'Plan 4 (Scotland)',
-  [StudentLoanPlan.Plan5]: 'Plan 5',
-  [StudentLoanPlan.Postgraduate]: 'Postgraduate',
-};
-
 // ── Interfaces ─────────────────────────────────────
 
 /** A single tax band with its rate and boundaries */
 export interface TaxBand {
-  name: string;
+  name: TaxBandName;
   rate: number;
   min: number;
   max: number;
@@ -105,7 +76,7 @@ export type TaxOpeningRow =
 /** A breakdown row for one band: the pay it reaches, its rate and its tax. */
 export interface TaxBandRow {
   readonly kind: typeof TAX_ROW_KINDS.Band;
-  readonly name: string;
+  readonly name: TaxBandName;
   readonly rate: number;
   readonly taxableAmount: number;
   readonly taxPaid: number;
@@ -189,23 +160,6 @@ export type TaxYear = YearLabel & {
 };
 
 /**
- * Read a label as a TAX year, writing down the moment a label takes that
- * meaning.
- *
- * The brand is optional on the type, so a bare label still assigns to a
- * `TaxYear`; this call is the conventional way to say which basis a label
- * is read on. What the brand enforces is narrower: a value already typed
- * as a `PayYear` cannot be passed where a `TaxYear` is expected.
- * `tests/year-basis.test.ts` records the two-step widening it does not
- * stop, and why.
- *
- * A no-op at runtime.
- */
-export function taxYear(label: YearLabel): TaxYear {
-  return label as TaxYear;
-}
-
-/**
  * The year whose PAY SCALE a salary was published on — the employer's
  * pay round, not the calendar.
  *
@@ -222,21 +176,13 @@ export type PayYear = YearLabel & {
   readonly [YEAR_BASIS]?: 'pay';
 };
 
-/**
- * Read a label as a PAY year, writing down the moment a label takes that
- * meaning. See {@link taxYear} for what the brand does and does not stop.
- */
-export function payYear(label: YearLabel): PayYear {
-  return label as PayYear;
-}
-
 /** A UK nation this library computes for. */
 export type Nation = keyof typeof NATIONS;
 
 /**
  * Tax region discriminant.
  *
- * `'rUK'` — "rest of UK" in HMRC terminology.
+ * `'rUK'` — the rest of the UK.
  * England, Wales, and Northern Ireland share the
  * same income tax bands and rates. Scotland sets
  * its own via the Scottish Parliament, so it is a
@@ -269,6 +215,36 @@ export type PensionChoice =
   };
 
 // ── Constants ──────────────────────────────────────
+
+/**
+ * How many of each period make a year, as an annual figure is divided into
+ * one: 52 weeks, as HMRC's payroll test data and GOV.UK's weekly State
+ * Pension count them, a 53rd pay week aside.
+ */
+export const PERIODS_PER_YEAR: Readonly<Record<Period, number>> = {
+  [Period.Weekly]: 52,
+  [Period.Monthly]: 12,
+  [Period.Annual]: 1,
+};
+
+/**
+ * Each plan's name, for the reason NATIONS carries nation labels:
+ * consumers rendering a plan should never invent competing wording, and
+ * a plan added to the enum fails the Record check here and in every
+ * consumer map. One label goes past the plan's own name, deliberately:
+ * Plan 4 adds "(Scotland)", the fact that sets it apart (it is Scotland's
+ * plan alone), which the bare name does not say.
+ */
+export const STUDENT_LOAN_PLAN_LABELS: Record<
+  StudentLoanPlan,
+  string
+> = {
+  [StudentLoanPlan.Plan1]: 'Plan 1',
+  [StudentLoanPlan.Plan2]: 'Plan 2',
+  [StudentLoanPlan.Plan4]: 'Plan 4 (Scotland)',
+  [StudentLoanPlan.Plan5]: 'Plan 5',
+  [StudentLoanPlan.Postgraduate]: 'Postgraduate',
+};
 
 /** No pension: what a calculation takes until one is set. */
 export const NO_PENSION: PensionChoice = {basis: PensionBasis.None};
@@ -328,11 +304,10 @@ export const PREVIOUS_TAX_YEAR: TaxYear = taxYear(TAX_YEARS.Y2025_26);
  * `label` is the nation's OWN NAME, not display chrome: a caller
  * printing "Northern Ireland" must not be free to render "N. Ireland"
  * or "NI" and have two surfaces disagree about what the same value is
- * called. That is the same reason {@link STUDENT_LOAN_PLAN_LABELS}
- * sits beside its enum. It is the only presentational thing here and
- * it is deliberate — this package holds no icons, colours or view
- * props, and a doc comment naming a caller's screen is the sign one
- * has crept back in.
+ * called. {@link STUDENT_LOAN_PLAN_LABELS} and {@link PERIOD_LABELS} name
+ * their values for the same reason. Those names are the presentational
+ * things here, and deliberately so: this package holds no icons, colours
+ * or view props.
  */
 export const NATIONS = {
   england: {label: 'England'},
@@ -352,8 +327,8 @@ export const NATION_KEYS = {
 /**
  * Tax region determines which income tax bands apply.
  *
- * `rUK` ("rest of UK") is HMRC's term for England,
- * Wales, and Northern Ireland, which share the same
+ * `rUK` (the rest of the UK) is England, Wales and
+ * Northern Ireland, which share the same
  * income tax rates. Scotland sets its own rates via
  * the Scottish Parliament and has six brackets
  * (starter, basic, intermediate, higher, advanced,
@@ -410,7 +385,9 @@ export type TaxBandName = (typeof TAX_BAND_NAMES)[keyof typeof TAX_BAND_NAMES];
  */
 export const DB_PENSION_INPUT_MULTIPLIER = 16;
 
-/** Each pay period's short name: 'Week', 'Month', 'Year'. */
+/** Each pay period's own short name ('Week', 'Month', 'Year'): the word
+ *  the period is, so a consumer naming a period reads it here rather than
+ *  inventing its own. */
 export const PERIOD_LABELS: Record<Period, string> = {
   [Period.Weekly]: 'Week',
   [Period.Monthly]: 'Month',
@@ -420,12 +397,43 @@ export const PERIOD_LABELS: Record<Period, string> = {
 // ── Functions ──────────────────────────────────────
 
 /**
+ * Read a label as a TAX year, writing down the moment a label takes that
+ * meaning.
+ *
+ * The brand is optional on the type, so a bare label still assigns to a
+ * `TaxYear`; this call is the conventional way to say which basis a label
+ * is read on. What the brand enforces is narrower: a value already typed
+ * as a `PayYear` cannot be passed where a `TaxYear` is expected.
+ * `tests/year-basis.test.ts` records the two-step widening it does not
+ * stop, and why.
+ *
+ * A no-op at runtime.
+ */
+export function taxYear(label: YearLabel): TaxYear {
+  return label as TaxYear;
+}
+
+/**
+ * Read a label as a PAY year, writing down the moment a label takes that
+ * meaning. See {@link taxYear} for what the brand does and does not stop.
+ */
+export function payYear(label: YearLabel): PayYear {
+  return label as PayYear;
+}
+
+/** Read a string, such as a URL parameter or a form answer, as a
+ *  {@link Nation}: true only for one of {@link NATIONS}' keys. */
+export function isNation(raw: string | null | undefined): raw is Nation {
+  return typeof raw === 'string' && Object.hasOwn(NATIONS, raw);
+}
+
+/**
  * The tax region a nation's income tax follows.
  */
 export function nationToTaxRegion(
   nation: Nation,
 ): TaxRegion {
-  return nation === TAX_REGIONS.scotland
+  return nation === NATION_KEYS.scotland
     ? TAX_REGIONS.scotland
     : TAX_REGIONS.rUK;
 }

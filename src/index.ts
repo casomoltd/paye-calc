@@ -97,6 +97,7 @@ export {
   PERIOD_LABELS,
   PERIODS_PER_YEAR,
   nationToTaxRegion,
+  isNation,
   GrossAnnual,
   NetAnnual,
   PensionPercent,
