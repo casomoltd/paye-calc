@@ -20,9 +20,10 @@ UK PAYE take-home pay calculator library.
 - `src/incomeTax.ts` — income tax rows for taxable pay and a code
 - `src/grossFor.ts` — pension income after income tax alone, both ways (`grossFor`, `netFor`), and an untaxed sum as taxable income (`grossEquivalent`)
 - `src/statePension.ts` — the full new State Pension rate, per tax year, each figure cited at its source
+- `src/nationalLivingWage.ts` — the National Living Wage per hour, by the year whose 1 April sets it, each figure cited at its source
 - `src/taxFreeChildcare.ts` — Tax-Free Childcare's income limit and top-up caps, per tax year, each figure cited at its source
 - `src/freeChildcareEngland.ts` — the income limit on England's free childcare for working parents, per tax year, cited to its own regulations
-- `src/perYear.ts` — package-private: how the per-year tables (`statePension.ts`, `taxFreeChildcare.ts`, `freeChildcareEngland.ts`) are read, refusing a year with no figures rather than lending another's
+- `src/perYear.ts` — package-private: how the per-year tables (`statePension.ts`, `nationalLivingWage.ts`, `taxFreeChildcare.ts`, `freeChildcareEngland.ts`) are read, refusing a year with no figures rather than lending another's
 - `src/minimumPensionAge.ts` — the minimum pension age on a date, the law's and a member's protected one, cited to the Finance Act
 - `src/TaxCode.ts` — HMRC tax code parser
 - `src/TaxYearConfig.ts` — tax year config types, the band lookups and the personal allowance taper

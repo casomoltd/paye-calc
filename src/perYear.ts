@@ -1,10 +1,12 @@
 /**
- * How a per-tax-year table of cited figures is read, package-private.
+ * How a per-year table of cited figures is read, package-private.
  *
  * Each table holds only the years whose figures were read at source, so a
- * year it lacks is refused rather than answered with another year's.
+ * year it lacks is refused rather than answered with another year's. The
+ * year is a label: a tax-year table is read with a `TaxYear`, which
+ * assigns to it, and a table keyed some other way with its own label.
  */
-import type {TaxYear, YearLabel} from './types.js';
+import type {YearLabel} from './types.js';
 
 /**
  * `year`'s entry in `table`. Throws RangeError naming `what` for a year
@@ -13,10 +15,9 @@ import type {TaxYear, YearLabel} from './types.js';
  * is answered.
  */
 export function figuresFor<T>(
-  table: Partial<Record<YearLabel, T>>, year: TaxYear, what: string,
+  table: Partial<Record<YearLabel, T>>, year: YearLabel, what: string,
 ): T {
-  const key: YearLabel = year;
-  const figures = table[key];
+  const figures = table[year];
   if (figures === undefined) {
     throw new RangeError(`no ${what} for ${year}`);
   }

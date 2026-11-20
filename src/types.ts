@@ -161,7 +161,7 @@ export interface StudentLoanBreakdown {
  * branded types, and they exist for SIGNATURES, not for keys.
  */
 export type YearLabel =
-  (typeof TAX_YEARS)[keyof typeof TAX_YEARS];
+  (typeof YEAR_LABELS)[keyof typeof YEAR_LABELS];
 
 declare const YEAR_BASIS: unique symbol;
 
@@ -181,24 +181,25 @@ declare const YEAR_BASIS: unique symbol;
  * already been established as one KIND of year being used as the
  * other.
  *
- * To index a label-keyed table with one, narrow it first — `const key:
- * YearLabel = year` — so the transition is visible at the boundary
- * where it happens rather than inferred everywhere.
+ * It indexes a label-keyed table directly: the brand guards signatures,
+ * not keys.
  */
 export type TaxYear = YearLabel & {
   readonly [YEAR_BASIS]?: 'tax';
 };
 
 /**
- * Read a label as a TAX year — the only way to mint one.
+ * Read a label as a TAX year, writing down the moment a label takes that
+ * meaning.
  *
- * The minting is what makes a label one basis: a `PayYear` widened to
- * a `YearLabel`, as every lookup does to index a table, becomes a
- * `TaxYear` only through this call, never by assignment, so the step
- * from one basis to the other is always written down.
+ * The brand is optional on the type, so a bare label still assigns to a
+ * `TaxYear`; this call is the conventional way to say which basis a label
+ * is read on. What the brand enforces is narrower: a value already typed
+ * as a `PayYear` cannot be passed where a `TaxYear` is expected.
+ * `tests/year-basis.test.ts` records the two-step widening it does not
+ * stop, and why.
  *
- * A no-op at runtime. Its whole job is to make the moment a label
- * acquires a meaning a thing you have to write down.
+ * A no-op at runtime.
  */
 export function taxYear(label: YearLabel): TaxYear {
   return label as TaxYear;
@@ -222,14 +223,14 @@ export type PayYear = YearLabel & {
 };
 
 /**
- * Read a label as a PAY year — the only way to mint one.
- * See {@link taxYear} for why the brand is required.
+ * Read a label as a PAY year, writing down the moment a label takes that
+ * meaning. See {@link taxYear} for what the brand does and does not stop.
  */
 export function payYear(label: YearLabel): PayYear {
   return label as PayYear;
 }
 
-/** UK nation for the region picker. */
+/** A UK nation this library computes for. */
 export type Nation = keyof typeof NATIONS;
 
 /**
@@ -272,13 +273,22 @@ export type PensionChoice =
 /** No pension: what a calculation takes until one is set. */
 export const NO_PENSION: PensionChoice = {basis: PensionBasis.None};
 
-/** Tax year constants */
-export const TAX_YEARS = {
+/**
+ * The published year labels, with no basis: the keys of a table that
+ * holds a pay year's scale, or a figure set from 1 April, as much as a tax
+ * year's. {@link YearLabel} is built from these.
+ */
+export const YEAR_LABELS = {
   Y2023_24: '2023-24',
   Y2024_25: '2024-25',
   Y2025_26: '2025-26',
   Y2026_27: '2026-27',
 } as const;
+
+/** The same labels, spelt where a table is keyed by tax year. A spelling,
+ *  not a check: both share one type, and the brand on a signature is the
+ *  guard. Its own object, so each name is an export in its own right. */
+export const TAX_YEARS: typeof YEAR_LABELS = {...YEAR_LABELS};
 
 /**
  * The tax year currently in force.
@@ -400,7 +410,7 @@ export type TaxBandName = (typeof TAX_BAND_NAMES)[keyof typeof TAX_BAND_NAMES];
  */
 export const DB_PENSION_INPUT_MULTIPLIER = 16;
 
-/** Human-readable short labels for period segments */
+/** Each pay period's short name: 'Week', 'Month', 'Year'. */
 export const PERIOD_LABELS: Record<Period, string> = {
   [Period.Weekly]: 'Week',
   [Period.Monthly]: 'Month',
@@ -410,7 +420,7 @@ export const PERIOD_LABELS: Record<Period, string> = {
 // ── Functions ──────────────────────────────────────
 
 /**
- * Maps a UI nation to the model-level tax region.
+ * The tax region a nation's income tax follows.
  */
 export function nationToTaxRegion(
   nation: Nation,

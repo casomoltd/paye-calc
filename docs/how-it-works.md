@@ -24,15 +24,15 @@ This package publishes no pay scales. It names both `TaxYear` and `PayYear` beca
 
 **`TaxYearEnd`** names a tax year by the calendar year it ends in: 2027 is 2026-27. `TaxYear` names only the years whose rates are published, and a pension input is read year by year to a leaving date years ahead, so a projected year needs a name that `TaxYear` cannot give.
 
-Its brand is required on the type itself, so a bare number does not assign to it, unlike `TaxYear`'s brand, which is [optional on the type](#the-brand-is-optional-on-the-type-and-required-at-the-mint). A scheme year ending 31 March is also a plain number, five days off a tax year ending 5 April, and a type that took any number would take one for the other. `taxYearEnd()` mints one from a number, and `taxYearEndFor()` from a date.
+Its brand is required on the type itself, so a bare number does not assign to it, unlike `TaxYear`'s brand, which is [optional on the type](#the-brand-is-optional-on-the-type). A scheme year ending 31 March is also a plain number, five days off a tax year ending 5 April, and a type that took any number would take one for the other. `taxYearEnd()` mints one from a number, and `taxYearEndFor()` from a date.
 
 `closingYearOf(label)` reads the calendar year any label closes in. It takes a `YearLabel` rather than either brand, so a pay year can be placed on a calendar without being minted as a tax year first.
 
-### The brand is optional on the type and required at the mint
+### The brand is optional on the type
 
 `TaxYear` and `PayYear` are both `YearLabel` plus a phantom brand, so a bare literal or a freshly parsed label still assigns to either. That is deliberate: a parse boundary needs no ceremony. What the brand stops is a value that has *already* been established as one kind of year being used as the other.
 
-`taxYear()` and `payYear()` are the only ways to mint one, and the brand they apply is required rather than optional. With an optional brand a label assigned to both, which left a two-step hole: `PayYear` → `YearLabel` → `TaxYear` compiled with no cast and no error. The single-expression mistake was caught; the two-step one was not.
+`taxYear()` and `payYear()` record which meaning a label has. They return the same optional-brand type, so they are a convention and not a gate. Passing a `PayYear` where a `TaxYear` is expected fails to compile. Widening it to a `YearLabel` first and then using it as a `TaxYear` does not: that two-step hole is open, and `tests/year-basis.test.ts` asserts that it is.
 
 ### Why `YearLabel` itself is not branded
 

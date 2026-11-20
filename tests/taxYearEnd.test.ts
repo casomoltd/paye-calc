@@ -6,7 +6,7 @@
 import {describe, expect, it} from 'vitest';
 import {
   TAX_YEARS, closingYearOf, payYear, taxYear, taxYearEnd, taxYearEndDate,
-  taxYearEndFor, taxYearEndOf, taxYearLabel, taxYearStartDate,
+  taxYearEndFor, taxYearEndOf, taxYearIn, taxYearLabel, taxYearStartDate,
 } from '../src/index.js';
 import type {TaxYearEnd} from '../src/index.js';
 
@@ -97,9 +97,17 @@ describe('a published tax year and its end', () => {
     expect(taxYearEndDate(end).getFullYear()).toBe(end);
   });
 
-  it.each(Object.values(TAX_YEARS))('%s is the same year by date', (label) => {
+  /** Each label and the calendar year it opens in, typed out. */
+  const OPENS = [
+    ['2023-24', 2023], ['2024-25', 2024], ['2025-26', 2025], ['2026-27', 2026],
+  ] as const;
+
+  it('pins the opening years for every label', () => {
+    expect(OPENS.map(([label]) => label)).toEqual(Object.values(TAX_YEARS));
+  });
+
+  it.each(OPENS)('%s is the same year by date', (label, startYear) => {
     const end = taxYearEndOf(taxYear(label));
-    const startYear = Number(label.slice(0, label.indexOf('-')));
     expect(taxYearEndFor(new Date(startYear, APRIL_MONTH_INDEX, 6))).toBe(end);
     expect(taxYearStartDate(end)).toEqual(new Date(startYear, APRIL_MONTH_INDEX, 6));
     expect(taxYearEndFor(taxYearStartDate(end))).toBe(end);
@@ -135,5 +143,17 @@ describe('closingYearOf', () => {
       expect(taxYearLabel(taxYearEnd(closingYearOf(payYear(label))))).toBe(label);
       expect(taxYearLabel(taxYearEnd(closingYearOf(taxYear(label))))).toBe(label);
     }
+  });
+});
+
+describe('taxYearIn', () => {
+  it('is the tax year in force on a date, turning on 6 April', () => {
+    expect(taxYearIn(new Date(2026, APRIL_MONTH_INDEX, 6))).toBe('2026-27');
+    expect(taxYearIn(new Date(2026, APRIL_MONTH_INDEX, 5))).toBe('2025-26');
+  });
+
+  it('refuses a date in a year it holds no rates for', () => {
+    expect(() => taxYearIn(new Date(2020, APRIL_MONTH_INDEX, 6)))
+      .toThrow(/no tax year rates for 2020-21/);
   });
 });

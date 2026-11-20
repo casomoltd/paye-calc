@@ -4,6 +4,7 @@ export type {PayInputs, PayFigures} from './pay.js';
 export {grossEquivalent, grossFor, netFor} from './grossFor.js';
 export {PENCE_PER_POUND, roundPence, uplift} from './money.js';
 export {fullNewStatePension, statePensionYearly} from './statePension.js';
+export {nationalLivingWageHourly} from './nationalLivingWage.js';
 export {taxFreeChildcare} from './taxFreeChildcare.js';
 export type {TaxFreeChildcare} from './taxFreeChildcare.js';
 export {freeChildcareEngland} from './freeChildcareEngland.js';
@@ -72,6 +73,7 @@ export type {ContributionSplit} from './pensionBases.js';
 export {
   getTaxYearConfig,
   availableTaxYears,
+  taxYearIn,
   disabledTaxYears,
 } from './taxYears/index.js';
 export {
@@ -83,6 +85,7 @@ export {
   STUDENT_LOAN_PLAN_LABELS,
   DB_PENSION_INPUT_MULTIPLIER,
   TAX_YEARS,
+  YEAR_LABELS,
   CURRENT_TAX_YEAR,
   PREVIOUS_TAX_YEAR,
   NATIONS,

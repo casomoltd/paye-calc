@@ -11,7 +11,7 @@
  * 2025-26 while the tax year in force is 2026-27, so a value carrying
  * one meaning must not be usable as the other.
  *
- * WHY THE BRAND IS OPTIONAL ON THE TYPES AND REQUIRED AT THE MINT.
+ * WHY THE BRAND IS OPTIONAL ON THE TYPES.
  * A phantom brand that every label satisfies leaves one hole: the
  * two-step widening `PayYear` -> `YearLabel` -> `TaxYear`, which
  * compiles with no cast because narrowing to `YearLabel` is the same
@@ -64,9 +64,9 @@ declare function scaleAt(year: PayYear): number;
 function typeAssertions(): unknown[] {
   // A freshly-parsed or literal year has not yet been established as
   // one kind or the other, so it widens to both. `taxYear()` and
-  // `payYear()` are available to say which is meant, and the data
-  // modules use them, but the brand is OPTIONAL so the boundary where
-  // a label is first read needs no ceremony.
+  // `payYear()` are available to say which is meant, but the brand is
+  // OPTIONAL so the boundary where a label is first read needs no
+  // ceremony.
   const asPay: PayYear = payYear(someLabel);
   const asTax: TaxYear = taxYear(someLabel);
   const bare: TaxYear = someLabel;

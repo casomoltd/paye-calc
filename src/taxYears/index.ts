@@ -2,6 +2,7 @@ import {
   TaxYear, TaxRegion, TAX_YEARS, YearLabel, taxYear,
 } from '../types.js';
 import type {TaxYearConfig} from '../TaxYearConfig.js';
+import {taxYearEndFor, taxYearLabel} from '../taxYearEnd.js';
 import {
   TaxYear2023,
   TaxYear2023Scotland,
@@ -59,6 +60,21 @@ export function getTaxYearConfig(
   // visible instead of letting every caller do it implicitly.
   const key: YearLabel = year;
   return taxYearConfigs[key][region];
+}
+
+/**
+ * The tax year in force on a date, among the years this library holds
+ * rates for. Throws RangeError for a date in a year it holds none for,
+ * rather than answering with another year's rates.
+ */
+export function taxYearIn(date: Date): TaxYear {
+  const label = taxYearLabel(taxYearEndFor(date));
+  const held = (Object.keys(taxYearConfigs) as YearLabel[])
+    .find((year) => year === label);
+  if (held === undefined) {
+    throw new RangeError(`no tax year rates for ${label}`);
+  }
+  return taxYear(held);
 }
 
 /** List of available tax years for UI selection */
