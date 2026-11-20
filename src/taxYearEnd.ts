@@ -1,7 +1,7 @@
 /**
- * A tax year named by the calendar year it ends in, and the dates that
- * bound it. A UK tax year runs from 6 April to the 5 April after it
- * (Income Tax Act 2007 s.4(3),
+ * A tax year named by the calendar year it ends in, the dates that bound
+ * it, and the calendar year a year label closes in. A UK tax year runs
+ * from 6 April to the 5 April after it (Income Tax Act 2007 s.4(3),
  * https://www.legislation.gov.uk/ukpga/2007/3/section/4).
  */
 import type {TaxYear, YearLabel} from './types.js';
@@ -68,10 +68,19 @@ export function taxYearEndDate(end: TaxYearEnd): Date {
   return new Date(end, APRIL_MONTH_INDEX, LAST_DAY_OF_TAX_YEAR);
 }
 
+/**
+ * The calendar year any year label closes in: 2027 for '2026-27'. It reads
+ * the label alone, so a tax year and a pay year share it: each caller mints
+ * its own year-end from the number, and neither year is relabelled as the
+ * other on the way. It reads the form {@link taxYearLabel} writes.
+ */
+export function closingYearOf(label: YearLabel): number {
+  return Number(label.slice(0, label.indexOf('-'))) + 1;
+}
+
 /** A published tax year by the year it ends in: 2027 for '2026-27'. */
 export function taxYearEndOf(year: TaxYear): TaxYearEnd {
-  const label: YearLabel = year;
-  return taxYearEnd(Number(label.slice(0, label.indexOf('-'))) + 1);
+  return taxYearEnd(closingYearOf(year));
 }
 
 /** A tax year as a label writes it, published or not: '2026-27' for

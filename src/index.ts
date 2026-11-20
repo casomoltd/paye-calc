@@ -52,8 +52,8 @@ export {
   refuseBeforePensionInputPeriods,
 } from './pensionInputPeriod.js';
 export {
-  taxYearEnd, taxYearEndDate, taxYearEndFor, taxYearEndOf, taxYearLabel,
-  taxYearStartDate,
+  closingYearOf, taxYearEnd, taxYearEndDate, taxYearEndFor, taxYearEndOf,
+  taxYearLabel, taxYearStartDate,
 } from './taxYearEnd.js';
 export type {TaxYearEnd} from './taxYearEnd.js';
 export type {

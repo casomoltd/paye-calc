@@ -5,8 +5,8 @@
  */
 import {describe, expect, it} from 'vitest';
 import {
-  TAX_YEARS, taxYear, taxYearEnd, taxYearEndDate, taxYearEndFor,
-  taxYearEndOf, taxYearLabel, taxYearStartDate,
+  TAX_YEARS, closingYearOf, payYear, taxYear, taxYearEnd, taxYearEndDate,
+  taxYearEndFor, taxYearEndOf, taxYearLabel, taxYearStartDate,
 } from '../src/index.js';
 import type {TaxYearEnd} from '../src/index.js';
 
@@ -122,3 +122,18 @@ export function brandGuards(end: TaxYearEnd): unknown[] {
     taxYearEndDate(taxYearEnd(end + 1)),
   ];
 }
+
+describe('closingYearOf', () => {
+  it('reads the year a label closes in, whichever year it names', () => {
+    expect(closingYearOf('2026-27')).toBe(2027);
+    expect(closingYearOf(taxYear('2025-26'))).toBe(2026);
+    expect(closingYearOf(payYear('2025-26'))).toBe(2026);
+  });
+
+  it('reads back every label taxYearLabel writes, for either year', () => {
+    for (const label of Object.values(TAX_YEARS)) {
+      expect(taxYearLabel(taxYearEnd(closingYearOf(payYear(label))))).toBe(label);
+      expect(taxYearLabel(taxYearEnd(closingYearOf(taxYear(label))))).toBe(label);
+    }
+  });
+});

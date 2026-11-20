@@ -26,6 +26,8 @@ This package publishes no pay scales. It names both `TaxYear` and `PayYear` beca
 
 Its brand is required on the type itself, so a bare number does not assign to it, unlike `TaxYear`'s brand, which is [optional on the type](#the-brand-is-optional-on-the-type-and-required-at-the-mint). A scheme year ending 31 March is also a plain number, five days off a tax year ending 5 April, and a type that took any number would take one for the other. `taxYearEnd()` mints one from a number, and `taxYearEndFor()` from a date.
 
+`closingYearOf(label)` reads the calendar year any label closes in. It takes a `YearLabel` rather than either brand, so a pay year can be placed on a calendar without being minted as a tax year first.
+
 ### The brand is optional on the type and required at the mint
 
 `TaxYear` and `PayYear` are both `YearLabel` plus a phantom brand, so a bare literal or a freshly parsed label still assigns to either. That is deliberate: a parse boundary needs no ceremony. What the brand stops is a value that has *already* been established as one kind of year being used as the other.
